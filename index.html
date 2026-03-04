@@ -144,6 +144,37 @@
             font-size: 12px;
         }
 
+        /* Scan Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-family: inherit;
+            font-size: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .mode-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .mode-btn.active {
+            background: var(--accent-blue);
+            color: #fff;
+        }
+
         /* Main Layout */
         .main-container {
             display: flex;
@@ -502,6 +533,125 @@
             transform: scale(1.02);
         }
 
+        /* Bulk Scan Results */
+        .bulk-progress {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-blue);
+            transition: width 0.3s ease;
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .bulk-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .summary-card.malicious { border-left: 3px solid var(--accent-red); }
+        .summary-card.suspicious { border-left: 3px solid var(--accent-yellow); }
+        .summary-card.clean { border-left: 3px solid var(--accent-green); }
+        .summary-card.undetected { border-left: 3px solid var(--text-secondary); }
+
+        .bulk-results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .bulk-results-table th,
+        .bulk-results-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .bulk-results-table th {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            position: sticky;
+            top: 0;
+        }
+
+        .bulk-results-table tr:hover td {
+            background: var(--bg-tertiary);
+        }
+
+        .ioc-cell {
+            font-family: 'JetBrains Mono', monospace;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Copy buttons */
+        .copy-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .copy-btn-small {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .copy-btn-small:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+
         /* Export Buttons */
         .export-bar {
             display: flex;
@@ -711,9 +861,14 @@
     <div class="main-container">
         <!-- Sidebar -->
         <aside class="sidebar">
+            <div class="mode-toggle">
+                <button class="mode-btn active" data-mode="single" onclick="setScanMode('single')">Single IOC</button>
+                <button class="mode-btn" data-mode="bulk" onclick="setScanMode('bulk')">Bulk IOCs</button>
+            </div>
             <div class="input-group">
                 <label>Indicator (IOC)</label>
                 <textarea id="iocInput" placeholder="Enter URL, IP, Domain, or Hash (MD5/SHA1/SHA256)"></textarea>
+                <small class="bulk-hint" style="display:none; color: var(--text-muted);">Enter one IOC per line (max 100 IOCs)</small>
             </div>
             <div class="input-group">
                 <label>Type</label>
@@ -748,6 +903,7 @@
                 <button class="tab-btn active" data-tab="vt" onclick="switchTab('vt')">VirusTotal</button>
                 <button class="tab-btn" data-tab="abuseipdb" onclick="switchTab('abuseipdb')">AbuseIPDB</button>
                 <button class="tab-btn" data-tab="combined" onclick="switchTab('combined')">Combined View</button>
+                <button class="tab-btn bulk-tab" data-tab="bulk" onclick="switchTab('bulk')" style="display:none;">Bulk Results</button>
             </div>
 
             <div id="vtTab" class="tab-content active">
@@ -826,6 +982,9 @@
             type: ''
         };
         let recentScans = [];
+        let scanMode = 'single'; // 'single' or 'bulk'
+        let bulkResults = [];
+        let bulkScanProgress = 0;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -876,6 +1035,33 @@
             }
             
             return 'unknown';
+        }
+
+        // Scan Mode Toggle
+        function setScanMode(mode) {
+            scanMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.mode === mode) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            const hint = document.querySelector('.bulk-hint');
+            const input = document.getElementById('iocInput');
+            const bulkTabBtn = document.querySelector('.bulk-tab');
+            
+            if (mode === 'bulk') {
+                hint.style.display = 'block';
+                input.placeholder = 'Enter one IOC per line\n8.8.8.8\n1.1.1.1\nmalicious.com';
+                if (bulkTabBtn) bulkTabBtn.style.display = 'inline-flex';
+            } else {
+                hint.style.display = 'none';
+                input.placeholder = 'Enter URL, IP, Domain, or Hash (MD5/SHA1/SHA256)';
+                if (bulkTabBtn) bulkTabBtn.style.display = 'none';
+                // Switch back to vt tab when leaving bulk mode
+                switchTab('vt');
+            }
         }
 
         // API Key Management
@@ -972,6 +1158,21 @@
 
         // Tab Switching
         function switchTab(tab) {
+            // Handle bulk tab specially - show vt tab but keep bulk button active
+            if (tab === 'bulk') {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.tab === 'bulk') {
+                        btn.classList.add('active');
+                    }
+                });
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('vtTab').classList.add('active');
+                return;
+            }
+            
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.tab === tab);
             });
@@ -987,15 +1188,30 @@
 
         // Main Scan Function
         async function startScan() {
-            const ioc = document.getElementById('iocInput').value.trim();
-            const typeSelect = document.getElementById('iocType').value;
-            
-            if (!ioc) {
+            const input = document.getElementById('iocInput').value.trim();
+            if (!input) {
                 alert('Please enter an IOC to scan');
                 return;
             }
 
+            if (scanMode === 'bulk') {
+                await startBulkScan(input);
+            } else {
+                await startSingleScan(input);
+            }
+        }
+
+        // Single IOC Scan
+        async function startSingleScan(input) {
+            const typeSelect = document.getElementById('iocType').value;
+            const ioc = input.trim();
             const type = typeSelect === 'auto' ? detectIOCType(ioc) : typeSelect;
+            
+            if (type === 'unknown') {
+                alert('Unable to detect IOC type. Please select a type manually.');
+                return;
+            }
+            
             currentResults.ioc = ioc;
             currentResults.type = type;
 
@@ -1034,6 +1250,568 @@
                     renderCombined();
                 }
             }, 1000);
+        }
+
+        // Bulk IOC Scan
+        async function startBulkScan(input) {
+            const lines = input.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            // Limit to 100 IOCs
+            const iocs = lines.slice(0, 100);
+            
+            if (iocs.length === 0) {
+                alert('Please enter at least one IOC to scan');
+                return;
+            }
+
+            const keys = getKeys();
+            if (!keys.vt) {
+                alert('VirusTotal API key is required for bulk scanning');
+                return;
+            }
+
+            // Initialize bulk results
+            bulkResults = [];
+            bulkScanProgress = 0;
+
+            // Show bulk results tab
+            switchTab('vt');
+            document.getElementById('exportBar').style.display = 'flex';
+
+            // Render initial progress
+            renderBulkProgress(0, iocs.length);
+
+            // Process each IOC
+            for (let i = 0; i < iocs.length; i++) {
+                const ioc = iocs[i];
+                const type = detectIOCType(ioc);
+                
+                // Get VirusTotal result
+                let vtResult = null;
+                let vtError = null;
+                try {
+                    vtResult = await scanVirusTotalBulk(ioc, type, keys.vt);
+                } catch (e) {
+                    vtError = e.message;
+                }
+                
+                // Get AbuseIPDB result for IPs only
+                let abuseResult = null;
+                let abuseError = null;
+                if (keys.abuseipdb && type === 'ip') {
+                    try {
+                        abuseResult = await scanAbuseIPDBBulk(ioc, keys.abuseipdb);
+                    } catch (e) {
+                        abuseError = e.message;
+                    }
+                }
+                
+                bulkResults.push({
+                    ioc: ioc,
+                    type: type,
+                    vt: vtResult,
+                    vtError: vtError,
+                    abuseipdb: abuseResult,
+                    abuseError: abuseError,
+                    status: (vtError && !vtResult) ? 'error' : 'success'
+                });
+                
+                bulkScanProgress = i + 1;
+                renderBulkProgress(bulkScanProgress, iocs.length);
+            }
+
+            // Render final results
+            renderBulkResults();
+        }
+
+        // Bulk AbuseIPDB Scan
+        async function scanAbuseIPDBBulk(ioc, apiKey) {
+            try {
+                const response = await fetch(CORS_PROXY + encodeURIComponent(`https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ioc)}&maxAgeInDays=90&verbose=`), {
+                    headers: {
+                        'Key': apiKey,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch IP information');
+                }
+
+                const data = await response.json();
+                return data.data;
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        // Bulk VirusTotal Scan (returns result for bulk mode)
+        async function scanVirusTotalBulk(ioc, type, apiKey) {
+            let endpoint = '';
+            try {
+                switch (type) {
+                    case 'ip':
+                        endpoint = `https://www.virustotal.com/api/v3/ip_addresses/${ioc}`;
+                        break;
+                    case 'domain':
+                        endpoint = `https://www.virustotal.com/api/v3/domains/${ioc}`;
+                        break;
+                    case 'url':
+                        endpoint = `https://www.virustotal.com/api/v3/urls`;
+                        break;
+                    case 'hash':
+                        endpoint = `https://www.virustotal.com/api/v3/files/${ioc}`;
+                        break;
+                    default:
+                        return { error: 'Unsupported type' };
+                }
+
+                let url = endpoint;
+                let method = 'GET';
+                let body = null;
+                
+                if (type === 'url') {
+                    url = 'https://www.virustotal.com/api/v3/urls';
+                    method = 'POST';
+                    body = new URLSearchParams({ url: ioc }).toString();
+                }
+
+                const response = await fetch(CORS_PROXY + encodeURIComponent(url), {
+                    method: method,
+                    headers: {
+                        'x-apikey': apiKey,
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: type === 'url' ? body : null
+                });
+
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        return { notFound: true, ioc: ioc };
+                    }
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // For URLs, need to get the analysis result
+                if (type === 'url' && data.data && data.data.id) {
+                    const analysisUrl = CORS_PROXY + encodeURIComponent(`https://www.virustotal.com/api/v3/urls/${data.data.id}`);
+                    const analysisResp = await fetch(analysisUrl, {
+                        headers: { 'x-apikey': apiKey }
+                    });
+                    if (analysisResp.ok) {
+                        return await analysisResp.json();
+                    }
+                }
+                
+                return data;
+            } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        // Render Bulk Progress
+        function renderBulkProgress(current, total) {
+            const container = document.getElementById('vtResults');
+            const percentage = Math.round((current / total) * 100);
+            
+            container.innerHTML = `
+                <div class="bulk-progress">
+                    <h3>Scanning ${total} IOCs...</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span>Progress: ${current} / ${total}</span>
+                        <span>${percentage}% complete</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('vtEmpty').style.display = 'none';
+        }
+
+        // Render Bulk Results
+        function renderBulkResults() {
+            const container = document.getElementById('vtResults');
+            
+            // Calculate stats
+            let malicious = 0, suspicious = 0, clean = 0, undetected = 0, errors = 0;
+            
+            bulkResults.forEach(r => {
+                if (r.status === 'error') {
+                    errors++;
+                    return;
+                }
+                
+                const vtData = r.vt;
+                const abuseData = r.abuseipdb;
+                
+                let malCount = 0;
+                let abuseConfidence = 0;
+                
+                if (vtData && vtData.data) {
+                    const attrs = vtData.data.attributes;
+                    const lastAnalysis = attrs.last_analysis_stats;
+                    malCount = (lastAnalysis.malicious || 0) + (lastAnalysis.suspicious || 0);
+                }
+                
+                if (abuseData && !abuseData.error) {
+                    abuseConfidence = abuseData.abuseConfidenceScore || 0;
+                }
+                
+                const combinedRisk = malCount + (abuseConfidence > 50 ? 20 : 0);
+                
+                if (combinedRisk > 20 || abuseConfidence > 75) malicious++;
+                else if (combinedRisk > 5 || abuseConfidence > 25) suspicious++;
+                else if (malCount === 0 && abuseConfidence === 0) clean++;
+                else undetected++;
+            });
+
+            // Sort: malicious first, then suspicious, then others
+            const sortedResults = [...bulkResults].sort((a, b) => {
+                const getRisk = (r) => {
+                    let malCount = 0;
+                    let abuseConfidence = 0;
+                    if (r.vt && r.vt.data) {
+                        const stats = r.vt.data.attributes.last_analysis_stats;
+                        malCount = (stats.malicious || 0) + (stats.suspicious || 0);
+                    }
+                    if (r.abuseipdb && !r.abuseipdb.error) {
+                        abuseConfidence = r.abuseipdb.abuseConfidenceScore || 0;
+                    }
+                    return malCount + (abuseConfidence > 50 ? 20 : 0);
+                };
+                return getRisk(b) - getRisk(a);
+            });
+
+            // Add copy button style
+            let html = `
+                <style>
+                    .copy-btn-small {
+                        background: var(--bg-tertiary);
+                        border: 1px solid var(--border);
+                        color: var(--text-primary);
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 11px;
+                        margin-left: 8px;
+                    }
+                    .copy-btn-small:hover {
+                        background: var(--accent-blue);
+                        color: white;
+                    }
+                </style>
+                <div style="margin-bottom:16px;">
+                    <button class="btn btn-sm" onclick="copyAllBulkResults()">
+                        Copy All Results
+                    </button>
+                </div>
+                <div class="bulk-summary">
+                    <div class="summary-card malicious">
+                        <div class="stat-value malicious">${malicious}</div>
+                        <div class="stat-label">Malicious</div>
+                    </div>
+                    <div class="summary-card suspicious">
+                        <div class="stat-value suspicious">${suspicious}</div>
+                        <div class="stat-label">Suspicious</div>
+                    </div>
+                    <div class="summary-card clean">
+                        <div class="stat-value clean">${clean}</div>
+                        <div class="stat-label">Clean</div>
+                    </div>
+                    <div class="summary-card undetected">
+                        <div class="stat-value undetected">${undetected}</div>
+                        <div class="stat-label">Undetected</div>
+                    </div>
+                </div>
+                
+                <table class="bulk-results-table">
+                    <thead>
+                        <tr>
+                            <th>IOC</th>
+                            <th>VirusTotal</th>
+                            <th>AbuseIPDB</th>
+                            <th>Risk</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            sortedResults.forEach(r => {
+                let vtText = '-';
+                let abuseText = '-';
+                let riskLevel = 'LOW';
+                let badgeClass = 'clean';
+                let malCount = 0;
+                let abuseConf = 0;
+                
+                // VirusTotal
+                if (r.vt && r.vt.data) {
+                    const stats = r.vt.data.attributes.last_analysis_stats;
+                    const total = Object.values(stats).reduce((a, b) => a + b, 0);
+                    malCount = (stats.malicious || 0) + (stats.suspicious || 0);
+                    vtText = `${malCount}/${total} detections`;
+                } else if (r.vtError) {
+                    vtText = 'Error';
+                }
+                
+                // AbuseIPDB
+                if (r.abuseipdb && !r.abuseipdb.error) {
+                    abuseConf = r.abuseipdb.abuseConfidenceScore || 0;
+                    const reports = r.abuseipdb.totalReports || 0;
+                    abuseText = `Conf: ${abuseConf}% / Reports: ${reports}`;
+                } else if (r.type === 'ip') {
+                    abuseText = 'N/A';
+                }
+                
+                // Risk level
+                const combinedRisk = malCount + (abuseConf > 50 ? 20 : 0);
+                if (combinedRisk > 20 || abuseConf > 75) {
+                    riskLevel = 'HIGH';
+                    badgeClass = 'malicious';
+                } else if (combinedRisk > 5 || abuseConf > 25) {
+                    riskLevel = 'MEDIUM';
+                    badgeClass = 'suspicious';
+                } else {
+                    riskLevel = 'LOW';
+                    badgeClass = 'clean';
+                }
+
+                html += `
+                    <tr>
+                        <td class="ioc-cell" title="${r.ioc}"><strong>${r.ioc}</strong></td>
+                        <td>${vtText}</td>
+                        <td>${abuseText}</td>
+                        <td><span class="category-badge ${badgeClass}">${riskLevel}</span></td>
+                        <td><button class="copy-btn-small" onclick="copyBulkRow('${r.ioc}')">Copy</button></td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            document.getElementById('vtEmpty').style.display = 'none';
+        }
+
+        // Copy single bulk row
+        function copyBulkRow(ioc) {
+            const r = bulkResults.find(b => b.ioc === ioc);
+            if (!r) return;
+            
+            let malCount = 0;
+            let abuseConf = 0;
+            let reports = 0;
+            let total = 0;
+            
+            if (r.vt && r.vt.data) {
+                const stats = r.vt.data.attributes.last_analysis_stats;
+                total = Object.values(stats).reduce((a, b) => a + b, 0);
+                malCount = (stats.malicious || 0) + (stats.suspicious || 0);
+            }
+            if (r.abuseipdb && !r.abuseipdb.error) {
+                abuseConf = r.abuseipdb.abuseConfidenceScore || 0;
+                reports = r.abuseipdb.totalReports || 0;
+            }
+            
+            const text = `${ioc} | VirusTotal: ${malCount}/${total} detections | AbuseIPDB: Confidence: ${abuseConf}% / Total Reports: ${reports}`;
+            navigator.clipboard.writeText(text);
+        }
+
+        // Copy all bulk results
+        function copyAllBulkResults() {
+            let text = 'IOC | VirusTotal | AbuseIPDB\n';
+            text += '--- | --- | ---\n';
+            
+            bulkResults.forEach(r => {
+                let malCount = 0;
+                let abuseConf = 0;
+                let reports = 0;
+                let total = 0;
+                
+                if (r.vt && r.vt.data) {
+                    const stats = r.vt.data.attributes.last_analysis_stats;
+                    total = Object.values(stats).reduce((a, b) => a + b, 0);
+                    malCount = (stats.malicious || 0) + (stats.suspicious || 0);
+                }
+                if (r.abuseipdb && !r.abuseipdb.error) {
+                    abuseConf = r.abuseipdb.abuseConfidenceScore || 0;
+                    reports = r.abuseipdb.totalReports || 0;
+                }
+                
+                text += `${r.ioc} | ${malCount}/${total} detections | Confidence: ${abuseConf}% / Reports: ${reports}\n`;
+            });
+            
+            navigator.clipboard.writeText(text);
+        }
+
+        // Render single bulk result card
+        function renderBulkResultCard(r) {
+            let vtDetection = '-';
+            let vtRisk = '-';
+            let abuseConfidence = '-';
+            let abuseReports = '-';
+            let riskLevel = 'LOW';
+            let badgeClass = 'clean';
+            let analysisText = '';
+            let recommendations = '';
+            
+            // VirusTotal data
+            if (r.vt && r.vt.data) {
+                const attrs = r.vt.data.attributes;
+                const lastAnalysis = attrs.last_analysis_stats;
+                const total = Object.values(lastAnalysis).reduce((a, b) => a + b, 0);
+                const malCount = (lastAnalysis.malicious || 0) + (lastAnalysis.suspicious || 0);
+                
+                vtDetection = `${malCount}/${total} detections`;
+                vtRisk = malCount > 10 ? 'HIGH' : malCount > 0 ? 'MEDIUM' : 'LOW';
+            } else if (r.vtError) {
+                vtDetection = 'Error';
+            }
+            
+            // AbuseIPDB data
+            if (r.abuseipdb && !r.abuseipdb.error) {
+                abuseConfidence = r.abuseipdb.abuseConfidenceScore + '%';
+                abuseReports = r.abuseipdb.totalReports || 0;
+            } else if (r.abuseError) {
+                abuseConfidence = 'Error';
+            }
+            
+            // Determine combined risk
+            let malCount = 0;
+            let abuseConf = 0;
+            
+            if (r.vt && r.vt.data) {
+                const stats = r.vt.data.attributes.last_analysis_stats;
+                malCount = (stats.malicious || 0) + (stats.suspicious || 0);
+            }
+            if (r.abuseipdb && !r.abuseipdb.error) {
+                abuseConf = r.abuseipdb.abuseConfidenceScore || 0;
+            }
+            
+            const combinedRisk = malCount + (abuseConf > 50 ? 20 : 0);
+            
+            if (combinedRisk > 20 || abuseConf > 75) {
+                riskLevel = 'HIGH';
+                badgeClass = 'malicious';
+                analysisText = `The IP address ${r.ioc} has been reported multiple times for malicious activity with a high abuse confidence score of ${abuseConf}%. This indicator shows strong indicators of being involved in malicious activity.`;
+                recommendations = `
+                    <li>Block the IP address at firewall/IPS level</li>
+                    <li>Check internal logs for any connections to this IP</li>
+                    <li>Scan affected systems for indicators of compromise</li>
+                    <li>Report to relevant abuse email (ISP/hosting provider)</li>
+                `;
+            } else if (combinedRisk > 5 || abuseConf > 25) {
+                riskLevel = 'MEDIUM';
+                badgeClass = 'suspicious';
+                analysisText = `The IP address ${r.ioc} has some suspicious indicators with ${malCount} VirusTotal detections and ${abuseConf}% abuse confidence. Further investigation is recommended.`;
+                recommendations = `
+                    <li>Monitor connections from this IP</li>
+                    <li>Review firewall logs for any matches</li>
+                    <li>Check if this activity is expected</li>
+                `;
+            } else {
+                riskLevel = 'LOW';
+                badgeClass = 'clean';
+                analysisText = `The IP address ${r.ioc} shows no significant malicious indicators.`;
+                recommendations = `<li>No immediate action required</li>`;
+            }
+
+            const linksHtml = r.type === 'ip' ? `
+                <p style="margin-top:12px;"><strong>Links:</strong></p>
+                <ul style="margin:8px 0;">
+                    ${r.abuseipdb && !r.abuseipdb.error ? `<li><a href="https://www.abuseipdb.com/check/${r.ioc}" target="_blank" style="color:var(--accent-blue);">AbuseIPDB: https://www.abuseipdb.com/check/${r.ioc}</a></li>` : ''}
+                    <li><a href="https://www.virustotal.com/gui/ip-address/${r.ioc}" target="_blank" style="color:var(--accent-blue);">VirusTotal: https://www.virustotal.com/gui/ip-address/${r.ioc}</a></li>
+                </ul>
+            ` : '';
+
+            return `
+                <div class="result-card" style="margin-bottom:16px;">
+                    <div class="card-header" onclick="toggleCard(this)">
+                        <h3>
+                            <span class="ioc-cell" style="max-width:300px;">${r.ioc}</span>
+                            <span class="category-badge ${badgeClass}">${riskLevel} RISK</span>
+                        </h3>
+                        <span>▼</span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Type:</strong> ${r.type.toUpperCase()}</p>
+                        ${r.type === 'ip' ? `
+                        <p><strong>AbuseIPDB Confidence:</strong> ${abuseConfidence}</p>
+                        <p><strong>AbuseIPDB Total Reports:</strong> ${abuseReports}</p>
+                        ` : ''}
+                        <p><strong>VirusTotal:</strong> ${vtDetection} (${vtRisk} RISK)</p>
+                        ${r.type === 'ip' && abuseConfidence !== '-' && abuseConfidence !== 'Error' ? `
+                        <p style="margin-top:12px;"><strong>Analysis:</strong></p>
+                        <p>${analysisText}</p>
+                        ${linksHtml}
+                        <p style="margin-top:12px;"><strong>Recommendations:</strong></p>
+                        <ul style="margin:8px 0;padding-left:20px;">
+                            ${recommendations}
+                        </ul>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Export Bulk Results to CSV
+        function exportBulkCSV() {
+            let csv = 'IOC,Type,VirusTotal Detection,Risk Level,AbuseIPDB Confidence,AbuseIPDB Reports\n';
+            
+            bulkResults.forEach(r => {
+                let malCount = 0;
+                let abuseConf = '-';
+                let abuseRep = '-';
+                
+                if (r.vt && r.vt.data) {
+                    const stats = r.vt.data.attributes.last_analysis_stats;
+                    malCount = (stats.malicious || 0) + (stats.suspicious || 0);
+                }
+                if (r.abuseipdb && !r.abuseipdb.error) {
+                    abuseConf = r.abuseipdb.abuseConfidenceScore + '%';
+                    abuseRep = r.abuseipdb.totalReports || 0;
+                }
+                
+                const risk = malCount > 10 || (r.abuseipdb && r.abuseipdb.abuseConfidenceScore > 75) ? 'HIGH' : 
+                             malCount > 0 || (r.abuseipdb && r.abuseipdb.abuseConfidenceScore > 25) ? 'MEDIUM' : 'LOW';
+                
+                csv += `"${r.ioc}","${r.type}","${malCount}","${risk}","${abuseConf}","${abuseRep}"\n`;
+            });
+            
+            downloadFile(csv, 'bulk_scan_results.csv', 'text/csv');
+        }
+
+        // Export Bulk Results to TXT
+        function exportBulkTXT() {
+            let txt = 'BULK IOC SCAN RESULTS\n';
+            txt += '===================\n\n';
+            
+            bulkResults.forEach(r => {
+                let malCount = 0;
+                let abuseConf = 'N/A';
+                let abuseRep = 'N/A';
+                
+                if (r.vt && r.vt.data) {
+                    const stats = r.vt.data.attributes.last_analysis_stats;
+                    const total = Object.values(stats).reduce((a, b) => a + b, 0);
+                    malCount = (stats.malicious || 0) + (stats.suspicious || 0);
+                    txt += `IOC: ${r.ioc}\n`;
+                    txt += `Type: ${r.type}\n`;
+                    txt += `VirusTotal: ${malCount}/${total} detections\n`;
+                }
+                if (r.abuseipdb && !r.abuseipdb.error) {
+                    abuseConf = r.abuseipdb.abuseConfidenceScore + '%';
+                    abuseRep = r.abuseipdb.totalReports || 0;
+                    txt += `AbuseIPDB Confidence: ${abuseConf}\n`;
+                    txt += `AbuseIPDB Total Reports: ${abuseRep}\n`;
+                }
+                txt += '\n';
+            });
+            
+            downloadFile(txt, 'bulk_scan_results.txt', 'text/plain');
         }
 
         function showLoading(target) {
@@ -1262,16 +2040,25 @@
                 <div class="result-card">
                     <div class="card-header" onclick="toggleCard(this)">
                         <h3>🛡️ Engine Results (${engineResults.length} engines)</h3>
-                        <span>▼</span>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <select id="engineFilter" onchange="filterEngineResults()" style="padding:4px 8px;border-radius:4px;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);font-size:11px;">
+                                <option value="all">All Engines</option>
+                                <option value="malicious">Malicious Only</option>
+                                <option value="suspicious">Suspicious Only</option>
+                                <option value="harmless">Harmless Only</option>
+                                <option value="undetected">Undetected Only</option>
+                            </select>
+                            <span>▼</span>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <table class="data-table">
+                        <table class="data-table" id="engineResultsTable">
                             <thead>
                                 <tr><th>Engine</th><th>Category</th><th>Result</th><th>Method</th></tr>
                             </thead>
-                            <tbody>
+                            <tbody id="engineResultsBody">
                                 ${engineResults.sort((a, b) => a.name.localeCompare(b.name)).map(e => `
-                                    <tr>
+                                    <tr data-category="${e.category || ''}">
                                         <td>${e.name}</td>
                                         <td><span class="category-badge ${e.category || 'undetected'}">${e.category || 'N/A'}</span></td>
                                         <td>${e.result || '-'}</td>
@@ -1303,13 +2090,40 @@
                 <div class="result-card">
                     <div class="card-header" onclick="toggleCard(this)">
                         <h3>📄 Raw JSON Data</h3>
-                        <span>▼</span>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="copy-btn-small" onclick="event.stopPropagation();copyRawJSON('vt')">Copy JSON</button>
+                            <span>▼</span>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <pre class="json-view">${JSON.stringify(data, null, 2)}</pre>
+                        <pre class="json-view" id="rawJsonVt">${JSON.stringify(data, null, 2)}</pre>
                     </div>
                 </div>
             `;
+        }
+
+        // Copy raw JSON
+        function copyRawJSON(type) {
+            const el = document.getElementById(type === 'vt' ? 'rawJsonVt' : 'rawJsonAbuse');
+            if (el) {
+                navigator.clipboard.writeText(el.textContent);
+            }
+        }
+
+        // Filter engine results
+        function filterEngineResults() {
+            const filter = document.getElementById('engineFilter');
+            if (!filter) return;
+            const filterValue = filter.value;
+            const rows = document.querySelectorAll('#engineResultsBody tr');
+            rows.forEach(row => {
+                const category = row.getAttribute('data-category');
+                if (filterValue === 'all') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = category === filterValue ? '' : 'none';
+                }
+            });
         }
 
         // AbuseIPDB API
@@ -1451,10 +2265,13 @@
                 <div class="result-card">
                     <div class="card-header" onclick="toggleCard(this)">
                         <h3>📄 Raw JSON Data</h3>
-                        <span>▼</span>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <button class="copy-btn-small" onclick="event.stopPropagation();copyRawJSON('abuse')">Copy JSON</button>
+                            <span>▼</span>
+                        </div>
                     </div>
                     <div class="card-body">
-                        <pre class="json-view">${JSON.stringify(data, null, 2)}</pre>
+                        <pre class="json-view" id="rawJsonAbuse">${JSON.stringify(data, null, 2)}</pre>
                     </div>
                 </div>
             `;
@@ -1725,236 +2542,37 @@
             arrow.textContent = body.classList.contains('collapsed') ? '▶' : '▼';
         }
 
-        // Export Functions
+        // Export Functions - Clean CSV format
         function exportCSV() {
-            let csv = 'ThreatScan Investigator - Export\n';
-            csv += `IOC,${currentResults.ioc}\n`;
-            csv += `Type,${currentResults.type}\n`;
-            csv += `Scan Date,${new Date().toISOString()}\n\n`;
-
-            // Calculate verdict
-            let vtMalicious = 0;
-            let vtTotal = 0;
-            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-                const stats = currentResults.vt.data.attributes.last_analysis_stats;
-                vtTotal = Object.values(stats).reduce((a, b) => a + b, 0);
-                vtMalicious = stats.malicious + stats.suspicious;
+            let csv = '';
+            
+            // If it's an IP and we have AbuseIPDB data, use the clean format
+            if (currentResults.type === 'ip' && currentResults.abuseipdb) {
+                const a = currentResults.abuseipdb;
+                csv += 'ipAddress,abuseConfidenceScore,totalReports,isp,domain,countryCode,hostnames,isPublic,isWhitelisted,usageType,ipVersion,numDistinctUsers,lastReportedAt,isTor\n';
+                
+                const hostnames = a.hostnames ? JSON.stringify(a.hostnames) : '[]';
+                csv += `${a.ipAddress || ''},${a.abuseConfidenceScore || 0},${a.totalReports || 0},${a.isp || ''},${a.domain || ''},${a.countryCode || ''},${hostnames},${a.isPublic ? 'TRUE' : 'FALSE'},${a.isWhitelisted ? 'TRUE' : ''},${a.usageType || ''},${a.ipVersion || 4},${a.numDistinctUsers || 0},${a.lastReportedAt || ''},${a.isTor ? 'TRUE' : 'FALSE'}\n`;
             }
             
-            let abuseConfidence = 0;
-            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
-                abuseConfidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
-            }
-
-            let verdict = '';
-            if (vtMalicious > 10 || abuseConfidence > 75) {
-                verdict = 'HIGH RISK - MALICIOUS';
-            } else if (vtMalicious > 0 || abuseConfidence > 50) {
-                verdict = 'SUSPICIOUS';
-            } else if (vtMalicious === 0 && abuseConfidence === 0) {
-                verdict = 'LOW RISK - CLEAN';
+            // Add VirusTotal data
+            csv += '\nIP,VTReports\n,';
+            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
+                const stats = currentResults.vt.data.attributes.last_analysis_stats;
+                const malicious = (stats.malicious || 0) + (stats.suspicious || 0);
+                csv += `${malicious}\n`;
             } else {
-                verdict = 'UNKNOWN';
-            }
-
-            // === THREAT VERDICT ===
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            csv += '                         THREAT VERDICT\n';
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            csv += `Verdict,${verdict}\n`;
-            csv += 'Disclaimer,This verdict is based on automated threat intelligence data and should NOT be used as the sole basis for security decisions. False positives are possible. Always verify with additional context and manual analysis. The expertise of a trained analyst is strongly recommended before taking any action.\n\n';
-
-            // === SUMMARY ===
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            csv += '                              SUMMARY\n';
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            csv += `IOC,${currentResults.ioc}\n`;
-            csv += `Type,${currentResults.type}\n`;
-            
-            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-                const stats = currentResults.vt.data.attributes.last_analysis_stats;
-                const total = Object.values(stats).reduce((a, b) => a + b, 0);
-                const malicious = stats.malicious + stats.suspicious;
-                const severity = malicious > 10 ? 'HIGH' : malicious > 0 ? 'MEDIUM' : 'LOW';
-                csv += `VirusTotal Detection,${malicious}/${total} (${severity} RISK)\n`;
-            }
-            
-            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
-                csv += `AbuseIPDB Confidence Score,${currentResults.abuseipdb.abuseConfidenceScore}%\n`;
-                csv += `AbuseIPDB Total Reports,${currentResults.abuseipdb.totalReports || 0}\n`;
-            }
-            csv += '\n';
-
-            // === EVIDENCE & ANALYSIS ===
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            csv += '                        EVIDENCE & ANALYSIS\n';
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            
-            // Evidence
-            csv += '--- Evidence ---\n';
-            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
-                csv += `IP Address,${currentResults.abuseipdb.ipAddress}`;
-                if (currentResults.abuseipdb.abuseConfidenceScore > 0) {
-                    csv += ` (${currentResults.abuseipdb.abuseConfidenceScore}% abuse confidence)`;
-                }
                 csv += '\n';
             }
             
-            if (currentResults.abuseipdb && currentResults.abuseipdb.totalReports > 0) {
-                csv += `Total Reports,${currentResults.abuseipdb.totalReports} abuse reports from ${currentResults.abuseipdb.numDistinctUsers} distinct users\n`;
-            }
-            
-            if (currentResults.abuseipdb && currentResults.abuseipdb.categories && currentResults.abuseipdb.categories.length > 0) {
-                const catNames = currentResults.abuseipdb.categories.map(c => getCategoryName(c)).join(', ');
-                csv += `Threat Categories,${catNames}\n`;
-            }
-            
-            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-                const stats = currentResults.vt.data.attributes.last_analysis_stats;
-                const malicious = stats.malicious + stats.suspicious;
-                if (malicious > 0) {
-                    csv += `VirusTotal,${malicious} engines flagged as malicious/suspicious out of ${Object.values(stats).reduce((a, b) => a + b, 0)} total\n`;
-                }
-                
-                if (currentResults.vt.data.attributes.threat_labels && currentResults.vt.data.attributes.threat_labels.length > 0) {
-                    csv += `Threat Labels,${currentResults.vt.data.attributes.threat_labels.join(', ')}\n`;
-                }
-            }
-            
-            // Analysis
-            csv += '\n--- Analysis ---\n';
-            let analysisText = '';
-            if (verdict === 'HIGH RISK - MALICIOUS') {
-                if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore > 75) {
-                    analysisText += `The IP address ${currentResults.ioc} has been reported multiple times for malicious activity with a high abuse confidence score of ${currentResults.abuseipdb.abuseConfidenceScore}%. `;
-                }
-                if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-                    const stats = currentResults.vt.data.attributes.last_analysis_stats;
-                    const malicious = stats.malicious + stats.suspicious;
-                    if (malicious > 10) {
-                        analysisText += `VirusTotal shows ${malicious} security vendors flagged this indicator as malicious or suspicious. `;
-                    }
-                }
-                analysisText += 'This indicator shows strong indicators of being involved in malicious activity. ';
-            } else if (verdict === 'SUSPICIOUS') {
-                if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore > 0) {
-                    analysisText += `The IP address ${currentResults.ioc} has a moderate abuse confidence score of ${currentResults.abuseipdb.abuseConfidenceScore}%. `;
-                }
-                if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-                    const stats = currentResults.vt.data.attributes.last_analysis_stats;
-                    const malicious = stats.malicious + stats.suspicious;
-                    if (malicious > 0) {
-                        analysisText += `Some security vendors (${malicious}) flagged this indicator. `;
-                    }
-                }
-                analysisText += 'This indicator shows some suspicious characteristics but requires further investigation. ';
-            } else if (verdict === 'LOW RISK - CLEAN') {
-                analysisText += `The IP address ${currentResults.ioc} has not been reported for abuse and shows no malicious indicators in VirusTotal. `;
-                if (currentResults.abuseipdb && currentResults.abuseipdb.isWhitelisted) {
-                    analysisText += 'This IP is also on the AbuseIPDB whitelist. ';
-                }
-            } else {
-                analysisText = 'Not enough data available to make a determination. Additional investigation recommended.';
-            }
-            csv += `Analysis,${analysisText}\n`;
-            csv += '\n';
-
-            // === RECOMMENDATION ===
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            csv += '                      RECOMMENDATION / NEXT STEPS\n';
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            
-            if (verdict === 'HIGH RISK - MALICIOUS') {
-                csv += '1. Block the IP address at firewall/IPS level\n';
-                csv += '2. Check internal logs for any connections to this IP\n';
-                csv += '3. Scan affected systems for indicators of compromise\n';
-                csv += '4. Report to relevant abuse email (ISP/hosting provider)\n';
-                csv += '5. Consider adding to blocklists\n';
-            } else if (verdict === 'SUSPICIOUS') {
-                csv += '1. Monitor connections to this IP\n';
-                csv += '2. Review logs for any recent activity\n';
-                csv += '3. Consider blocking if activity persists\n';
-                csv += '4. Further investigate context of connection\n';
-            } else if (verdict === 'LOW RISK - CLEAN') {
-                csv += '1. No immediate action required\n';
-                csv += '2. Continue monitoring as normal\n';
-                csv += '3. Whitelist if false positives occur\n';
-            } else {
-                csv += '1. Gather more context about the indicator\n';
-                csv += '2. Check additional threat intelligence sources\n';
-                csv += '3. Review the circumstances of the indicator\n';
-                csv += '4. Consult with senior analyst if needed\n';
-            }
-            csv += '\n';
-
-            // === REFERENCES ===
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            csv += '                             REFERENCES\n';
-            csv += '═══════════════════════════════════════════════════════════════\n';
-            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
-                csv += `AbuseIPDB,https://www.abuseipdb.com/check/${currentResults.abuseipdb.ipAddress}\n`;
-            }
-            if (currentResults.ioc) {
-                csv += `VirusTotal,https://www.virustotal.com/gui/ip-address/${currentResults.ioc}\n`;
-            }
-
-            downloadFile(csv, `threatscan_${currentResults.ioc}_${Date.now()}.csv`, 'text/csv');
-        }
-
-        function exportTXT() {
-            let txt = '═══════════════════════════════════════════════════════════════\n';
-            txt += '          THREATSCAN INVESTIGATOR - INVESTIGATION REPORT\n';
-            txt += '═══════════════════════════════════════════════════════════════\n\n';
-            
-            txt += `IOC: ${currentResults.ioc}\n`;
-            txt += `Type: ${currentResults.type}\n`;
-            txt += `Scan Date: ${new Date().toLocaleString()}\n\n`;
-
-            // Calculate verdict
-            let vtMalicious = 0;
-            let vtTotal = 0;
-            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-                const stats = currentResults.vt.data.attributes.last_analysis_stats;
-                vtTotal = Object.values(stats).reduce((a, b) => a + b, 0);
-                vtMalicious = stats.malicious + stats.suspicious;
-            }
-            
-            let abuseConfidence = 0;
-            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
-                abuseConfidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
-            }
-
-            let verdict = '';
-            let verdictIcon = '';
-            if (vtMalicious > 10 || abuseConfidence > 75) {
-                verdict = 'HIGH RISK - MALICIOUS';
-                verdictIcon = '🚨';
-            } else if (vtMalicious > 0 || abuseConfidence > 50) {
-                verdict = 'SUSPICIOUS';
-                verdictIcon = '⚠️';
-            } else if (vtMalicious === 0 && abuseConfidence === 0) {
-                verdict = 'LOW RISK - CLEAN';
-                verdictIcon = '✅';
-            } else {
-                verdict = 'UNKNOWN';
-                verdictIcon = '❓';
-            }
-
-            // === THREAT VERDICT ===
-            txt += '═══════════════════════════════════════════════════════════════\n';
-            txt += '                       THREAT VERDICT\n';
-            txt += '═══════════════════════════════════════════════════════════════\n';
-            txt += `  ${verdictIcon} ${verdict}\n\n`;
-            txt += '  Disclaimer: This verdict is based on automated threat intelligence data\n';
+            downloadFile(csv, 'OSINT-Results.csv', 'text/csv');
             txt += '  and should NOT be used as the sole basis for security decisions.\n';
             txt += '  False positives are possible. Always verify with additional context\n';
             txt += '  and manual analysis. The expertise of a trained analyst is\n';
             txt += '  strongly recommended before taking any action.\n\n';
 
-            // === SUMMARY ===
-            txt += '═══════════════════════════════════════════════════════════════\n';
-            txt += '                            SUMMARY\n';
-            txt += '═══════════════════════════════════════════════════════════════\n';
+            // SUMMARY
+            txt += 'SUMMARY\n';
             
             if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
                 const stats = currentResults.vt.data.attributes.last_analysis_stats;
@@ -1970,10 +2588,8 @@
             }
             txt += '\n';
 
-            // === EVIDENCE & ANALYSIS ===
-            txt += '═══════════════════════════════════════════════════════════════\n';
-            txt += '                      EVIDENCE & ANALYSIS\n';
-            txt += '═══════════════════════════════════════════════════════════════\n';
+            // EVIDENCE & ANALYSIS
+            txt += 'EVIDENCE & ANALYSIS\n';
             
             // Evidence
             txt += '--- Evidence ---\n';
@@ -2044,10 +2660,8 @@
             txt += `  ${analysisText}\n`;
             txt += '\n';
 
-            // === RECOMMENDATION ===
-            txt += '═══════════════════════════════════════════════════════════════\n';
-            txt += '                 RECOMMENDATION / NEXT STEPS\n';
-            txt += '═══════════════════════════════════════════════════════════════\n';
+            // RECOMMENDATION
+            txt += 'RECOMMENDATION / NEXT STEPS\n';
             
             if (verdict === 'HIGH RISK - MALICIOUS') {
                 txt += '  1. Block the IP address at firewall/IPS level\n';
@@ -2072,10 +2686,8 @@
             }
             txt += '\n';
 
-            // === REFERENCES ===
-            txt += '═══════════════════════════════════════════════════════════════\n';
-            txt += '                           REFERENCES\n';
-            txt += '═══════════════════════════════════════════════════════════════\n';
+            // REFERENCES
+            txt += 'REFERENCES\n';
             if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
                 txt += `  • AbuseIPDB: https://www.abuseipdb.com/check/${currentResults.abuseipdb.ipAddress}\n`;
             }
@@ -2083,9 +2695,7 @@
                 txt += `  • VirusTotal: https://www.virustotal.com/gui/ip-address/${currentResults.ioc}\n`;
             }
 
-            txt += '\n═══════════════════════════════════════════════════════════════\n';
-            txt += '                       END OF REPORT\n';
-            txt += '═══════════════════════════════════════════════════════════════\n';
+            txt += '\nEND OF REPORT\n';
 
             downloadFile(txt, `threatscan_${currentResults.ioc}_${Date.now()}.txt`, 'text/plain');
         }
