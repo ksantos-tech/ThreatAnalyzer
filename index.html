@@ -931,13 +931,13 @@
             </div>
 
             <div class="export-bar" id="exportBar" style="display: none;">
-                <button class="btn btn-success" onclick="exportCSV()">
+                <button class="btn btn-success" onclick="if (bulkResults.length > 0) { exportBulkCSV(); } else { exportCSV(); }">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
                     </svg>
                     Export CSV
                 </button>
-                <button class="btn" onclick="exportTXT()">
+                <button class="btn" onclick="if (bulkResults.length > 0) { exportBulkTXT(); } else { exportTXT(); }">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
                     </svg>
@@ -1759,12 +1759,22 @@
 
         // Export Bulk Results to CSV
         function exportBulkCSV() {
-            let csv = 'IOC,Type,VirusTotal Detection,Risk Level,AbuseIPDB Confidence,AbuseIPDB Reports\n';
+            let csv = 'IOC,Type,VirusTotal Detection,Risk Level,AbuseIPDB Confidence,AbuseIPDB Reports,Domain,CountryCode,Hostnames,IsPublic,IsWhitelisted,UsageType,IPVersion,NumDistinctUsers,LastReportedAt,IsTor\n';
             
             bulkResults.forEach(r => {
                 let malCount = 0;
                 let abuseConf = '-';
                 let abuseRep = '-';
+                let domain = '-';
+                let countryCode = '-';
+                let hostnames = '-';
+                let isPublic = '-';
+                let isWhitelisted = '-';
+                let usageType = '-';
+                let ipVersion = '-';
+                let numDistinctUsers = '-';
+                let lastReportedAt = '-';
+                let isTor = '-';
                 
                 if (r.vt && r.vt.data) {
                     const stats = r.vt.data.attributes.last_analysis_stats;
@@ -1773,12 +1783,22 @@
                 if (r.abuseipdb && !r.abuseipdb.error) {
                     abuseConf = r.abuseipdb.abuseConfidenceScore + '%';
                     abuseRep = r.abuseipdb.totalReports || 0;
+                    domain = r.abuseipdb.domain || '-';
+                    countryCode = r.abuseipdb.countryCode || '-';
+                    hostnames = r.abuseipdb.hostnames ? r.abuseipdb.hostnames.join('; ') : '-';
+                    isPublic = r.abuseipdb.isPublic !== undefined ? (r.abuseipdb.isPublic ? 'TRUE' : 'FALSE') : '-';
+                    isWhitelisted = r.abuseipdb.isWhitelisted ? 'TRUE' : 'FALSE';
+                    usageType = r.abuseipdb.usageType || '-';
+                    ipVersion = r.abuseipdb.ipVersion || '-';
+                    numDistinctUsers = r.abuseipdb.numDistinctUsers || 0;
+                    lastReportedAt = r.abuseipdb.lastReportedAt || '-';
+                    isTor = r.abuseipdb.isTor ? 'TRUE' : 'FALSE';
                 }
                 
                 const risk = malCount > 10 || (r.abuseipdb && r.abuseipdb.abuseConfidenceScore > 75) ? 'HIGH' : 
                              malCount > 0 || (r.abuseipdb && r.abuseipdb.abuseConfidenceScore > 25) ? 'MEDIUM' : 'LOW';
                 
-                csv += `"${r.ioc}","${r.type}","${malCount}","${risk}","${abuseConf}","${abuseRep}"\n`;
+                csv += `"${r.ioc}","${r.type}","${malCount}","${risk}","${abuseConf}","${abuseRep}","${domain}","${countryCode}","${hostnames}","${isPublic}","${isWhitelisted}","${usageType}","${ipVersion}","${numDistinctUsers}","${lastReportedAt}","${isTor}"\n`;
             });
             
             downloadFile(csv, 'bulk_scan_results.csv', 'text/csv');
@@ -1794,12 +1814,13 @@
                 let abuseConf = 'N/A';
                 let abuseRep = 'N/A';
                 
+                txt += `IOC: ${r.ioc}\n`;
+                txt += `Type: ${r.type}\n`;
+                
                 if (r.vt && r.vt.data) {
                     const stats = r.vt.data.attributes.last_analysis_stats;
                     const total = Object.values(stats).reduce((a, b) => a + b, 0);
                     malCount = (stats.malicious || 0) + (stats.suspicious || 0);
-                    txt += `IOC: ${r.ioc}\n`;
-                    txt += `Type: ${r.type}\n`;
                     txt += `VirusTotal: ${malCount}/${total} detections\n`;
                 }
                 if (r.abuseipdb && !r.abuseipdb.error) {
@@ -1807,6 +1828,16 @@
                     abuseRep = r.abuseipdb.totalReports || 0;
                     txt += `AbuseIPDB Confidence: ${abuseConf}\n`;
                     txt += `AbuseIPDB Total Reports: ${abuseRep}\n`;
+                    txt += `Domain: ${r.abuseipdb.domain || 'N/A'}\n`;
+                    txt += `Country Code: ${r.abuseipdb.countryCode || 'N/A'}\n`;
+                    txt += `Hostnames: ${r.abuseipdb.hostnames ? r.abuseipdb.hostnames.join(', ') : 'N/A'}\n`;
+                    txt += `Is Public: ${r.abuseipdb.isPublic !== undefined ? (r.abuseipdb.isPublic ? 'Yes' : 'No') : 'N/A'}\n`;
+                    txt += `Is Whitelisted: ${r.abuseipdb.isWhitelisted ? 'Yes' : 'No'}\n`;
+                    txt += `Usage Type: ${r.abuseipdb.usageType || 'N/A'}\n`;
+                    txt += `IP Version: ${r.abuseipdb.ipVersion || 'N/A'}\n`;
+                    txt += `Num Distinct Users: ${r.abuseipdb.numDistinctUsers || 0}\n`;
+                    txt += `Last Reported At: ${r.abuseipdb.lastReportedAt || 'N/A'}\n`;
+                    txt += `Is Tor: ${r.abuseipdb.isTor ? 'Yes' : 'No'}\n`;
                 }
                 txt += '\n';
             });
