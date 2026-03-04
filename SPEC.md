@@ -4,7 +4,7 @@
 
 **Project Name:** ThreatScan Investigator  
 **Type:** Single-page Web Application (Static HTML/CSS/JS)  
-**Core Functionality:** A threat intelligence investigation tool that queries urlscan.io and VirusTotal APIs to gather and display comprehensive security data for URLs, domains, IP addresses, and file hashes.  
+**Core Functionality:** A threat intelligence investigation tool that queries VirusTotal and AbuseIPDB APIs to gather and display comprehensive security data for URLs, domains, IP addresses, and file hashes.  
 **Target Users:** Security analysts, threat researchers, SOC analysts, and incident responders who need quick access to threat intelligence data.
 
 ---
@@ -36,9 +36,9 @@
   - WHOIS data (when available)
   - Related objects (URLs, domains, referring domains)
 
-#### urlscan.io API
-- **Endpoint:** `https://urlscan.io/api/v1/`
-- **Supported lookups:**
+#### AbuseIPDB API
+- **Endpoint:** `https://api.abuseipdb.com/api/v2/`
+- **Supported lookups:****
   - Search: `/search/?q={query}`
   - Result: `/result/{uuid}/`
   - Screenshot: `/result/{uuid}/screenshot.png`
@@ -72,7 +72,7 @@
 │   (Left - 35%)         │   (Right - 65%)                        │
 │                        │                                         │
 │   - IOC Input          │   - Tab: VirusTotal Results            │
-│   - Scan Type          │   - Tab: urlscan.io Results            │
+│   - Scan Type          │   - Tab: AbuseIPDB Results            │
 │   - Scan Button        │   - Tab: Combined View                 │
 │   - Recent Scans       │                                        │
 │                        │   Each tab shows:                      │
@@ -134,7 +134,7 @@
 - Recent scans list (last 10, clickable)
 
 **3. Results Panel (Main Area)**
-- Tab navigation: VirusTotal | urlscan.io | Combined
+- Tab navigation: VirusTotal | AbuseIPDB | Combined
 - Each result in collapsible cards:
   - **Summary Card:** Key stats (detection ratio, country, etc.)
   - **Details Card:** Full data in scrollable table
@@ -146,7 +146,7 @@
 
 **5. API Key Modal**
 - Input field for VirusTotal API key
-- Input field for urlscan.io API key
+- Input field for AbuseIPDB API key
 - "Save Keys" button (stored in localStorage)
 - "Clear Keys" button
 
@@ -174,10 +174,11 @@
 - List all engine detections with details
 - Show related IOCs (referring domains, etc.)
 
-**F4: urlscan.io Integration**
-- Submit URL for scanning (if not already scanned)
-- Retrieve existing scan results
-- Display screenshot thumbnail (click to enlarge)
+**F4: AbuseIPDB Integration**
+- Query IP address information
+- Display abuse confidence score
+- Show reported threats and categories
+- List recent reports
 - Extract and list all IOCs (IPs, domains, URLs)
 - Show HTTP timeline as table
 
@@ -225,7 +226,7 @@ phising/
 2. ✅ API keys can be saved and persist across sessions
 3. ✅ IOC input correctly detects type (URL/IP/domain/hash)
 4. ✅ VirusTotal API returns and displays all relevant fields
-5. ✅ urlscan.io API returns and displays scan results with screenshot
+5. ✅ AbuseIPDB API returns and displays IP reputation data
 6. ✅ Results display in organized, readable format
 7. ✅ CSV export produces valid, complete CSV file
 8. ✅ Plain text export produces readable formatted output

@@ -1,6 +1,6 @@
 # ThreatScan Investigator
 
-A powerful threat intelligence investigation tool that combines data from [VirusTotal](https://www.virustotal.com) and [urlscan.io](https://urlscan.io) APIs for comprehensive security analysis.
+A powerful threat intelligence investigation tool that combines data from [VirusTotal](https://www.virustotal.com) and [AbuseIPDB](https://www.abuseipdb.com) APIs for comprehensive security analysis.
 
 ## Features
 
@@ -11,12 +11,10 @@ A powerful threat intelligence investigation tool that combines data from [Virus
   - Community voting data
   - Full raw JSON data export
 
-- **urlscan.io Integration**: Scan and analyze web pages
-  - Full-page screenshots
-  - Extracted IOCs (IPs, domains, URLs)
-  - Cookie analysis
-  - Script tracking
-  - SSL certificate details
+- **AbuseIPDB Integration**: Check IP reputation and abuse history
+  - Abuse confidence score
+  - Reported threats and categories
+  - Network information (ISP, ASN, geo)
 
 - **Combined View**: Cross-reference data from both sources
 
@@ -39,10 +37,10 @@ A powerful threat intelligence investigation tool that combines data from [Virus
 3. Go to your profile settings
 4. Copy your API key
 
-**urlscan.io API Key:**
-1. Go to [urlscan.io](https://urlscan.io)
-2. Create a free account  
-3. Go to Settings > API
+**AbuseIPDB API Key:**
+1. Go to [AbuseIPDB](https://www.abuseipdb.com)
+2. Create a free account
+3. Navigate to API section
 4. Copy your API key
 
 ### 2. Host on GitHub Pages
@@ -76,10 +74,10 @@ A powerful threat intelligence investigation tool that combines data from [Virus
 1. Open your deployed site
 2. Click the "Settings" button in the header
 3. Enter your VirusTotal API key
-4. Enter your urlscan.io API key
+4. Enter your AbuseIPDB API key
 5. Click "Save Keys"
 
-The keys are stored locally in your browser (localStorage) - they are never sent to any server except the official VirusTotal and urlscan.io APIs.
+The keys are stored locally in your browser (localStorage) - they are never sent to any server except the official VirusTotal and AbuseIPDB APIs.
 
 ## Usage
 
