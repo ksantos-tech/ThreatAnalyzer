@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ThreatScan Investigator</title>
+    <link rel="icon" type="image/png" href="mainlogo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -213,12 +214,13 @@
             font-family: inherit;
             font-size: 14px;
             padding: 12px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-            background: var(--bg-primary);
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: var(--bg-tertiary);
             color: var(--text-primary);
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
+            transition: all 0.2s ease;
         }
 
         .input-group textarea:focus,
@@ -226,7 +228,8 @@
         .input-group select:focus {
             outline: none;
             border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+            box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.2), 0 0 15px rgba(88, 166, 255, 0.1);
+            background: var(--bg-secondary);
         }
 
         .input-group input::placeholder,
@@ -249,6 +252,54 @@
             flex-direction: column;
             gap: 8px;
             min-height: 0;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 50%;
+            left: 320px;
+            transform: translateY(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 300px;
+        }
+        
+        @media (max-width: 900px) {
+            .toast-container {
+                left: 24px;
+                top: auto;
+                bottom: 100px;
+                transform: none;
+            }
+        }
+        
+        .toast {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+            max-width: 320px;
+        }
+        
+        .toast.info { border-left: 3px solid #3b82f6; }
+        .toast.success { border-left: 3px solid #22c55e; }
+        .toast.warning { border-left: 3px solid #f59e0b; }
+        .toast.error { border-left: 3px solid #ef4444; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
         .recent-scans h3 {
@@ -311,30 +362,36 @@
 
         .results-tabs {
             display: flex;
-            border-bottom: 1px solid var(--border);
+            gap: 8px;
+            padding: 12px 16px;
             background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
         }
 
         .tab-btn {
             font-family: inherit;
-            font-size: 13px;
-            padding: 14px 24px;
-            border: none;
-            background: transparent;
+            font-size: 12px;
+            padding: 8px 16px;
+            border: 1px solid var(--border);
+            background: var(--bg-tertiary);
             color: var(--text-secondary);
             cursor: pointer;
-            border-bottom: 2px solid transparent;
-            transition: all 0.15s ease;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
         }
 
         .tab-btn:hover {
             color: var(--text-primary);
-            background: var(--bg-tertiary);
+            background: var(--bg-secondary);
+            border-color: var(--accent-blue);
         }
 
         .tab-btn.active {
-            color: var(--accent-blue);
-            border-bottom-color: var(--accent-blue);
+            color: var(--text-primary);
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
         }
 
         .tab-content {
@@ -652,6 +709,186 @@
             color: white;
         }
 
+        /* IP Query Generator */
+        .ip-query-section {
+            padding: 20px;
+        }
+
+        .ip-query-section .input-group {
+            margin-bottom: 16px;
+        }
+
+        .ip-query-section .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .ip-query-section textarea {
+            width: 100%;
+            min-height: 150px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            resize: vertical;
+        }
+
+        .ip-query-section textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+
+        .ip-query-section select {
+            width: 100%;
+            font-family: inherit;
+            font-size: 14px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .ip-query-section select:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .ip-option-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .ip-option-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .radio-option:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .radio-option.selected {
+            border-color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .radio-option input {
+            display: none;
+        }
+
+        .radio-option .radio-custom {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radio-option.selected .radio-custom {
+            border-color: var(--accent-blue);
+        }
+
+        .radio-option.selected .radio-custom::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+        }
+
+        .radio-option span {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .query-preview {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .query-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .query-preview-header h4 {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .query-output {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent-green);
+            background: var(--bg-secondary);
+            padding: 12px;
+            border-radius: 4px;
+            word-break: break-all;
+            white-space: pre-wrap;
+            min-height: 120px;
+            width: 100%;
+            border: 1px solid var(--border);
+            resize: vertical;
+        }
+
+        .query-output:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .query-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .ip-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .ip-count strong {
+            color: var(--accent-blue);
+        }
+
         /* Export Buttons */
         .export-bar {
             display: flex;
@@ -769,6 +1006,16 @@
             margin-bottom: 16px;
         }
 
+        /* Info State */
+        .info-message {
+            background: rgba(88,166,255,0.1);
+            border: 1px solid var(--accent-blue);
+            border-radius: 6px;
+            padding: 16px;
+            color: var(--accent-blue);
+            margin-bottom: 16px;
+        }
+
         /* JSON View */
         .json-view {
             background: var(--bg-primary);
@@ -836,10 +1083,8 @@
     <!-- Header -->
     <header class="header">
         <div class="header-left">
-            <svg class="logo" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>
-            </svg>
-            <h1>ThreatScan Investigator</h1>
+            <img src="mainlogo.png" alt="ThreatScan" class="logo" style="width: 50px; height: 50px; object-fit: contain;">
+            <h1>ThreatScan Investigator <span style="font-size: 14px; font-weight: normal; color: #58a6ff;">by </span><a href="https://www.linkedin.com/in/ksantos-tech/" target="_blank" style="color: #58a6ff; text-decoration: none; font-weight: bold; transition: color 0.2s ease;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#58a6ff'">KS</a></h1>
         </div>
         <div class="header-right">
             <div class="api-status">
@@ -847,12 +1092,20 @@
                 <span>VT</span>
                 <span class="status-dot" id="abuseipdbStatus"></span>
                 <span>AbuseIPDB</span>
+                <span class="status-dot" id="whoisStatus"></span>
+                <span>WHOIS</span>
             </div>
             <button class="btn" onclick="openSettings()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
                 </svg>
                 Settings
+            </button>
+            <button class="btn" onclick="openFAQs()" style="background: var(--accent-blue); color: white;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                </svg>
+                FAQs
             </button>
             <button class="btn" onclick="openAbout()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -865,32 +1118,34 @@
 
     <!-- Main Container -->
     <div class="main-container">
+        <!-- Toast Container -->
+        <div class="toast-container" id="toastContainer"></div>
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="mode-toggle">
-                <button class="mode-btn active" data-mode="single" onclick="setScanMode('single')">Single IOC</button>
-                <button class="mode-btn" data-mode="bulk" onclick="setScanMode('bulk')">Bulk IOCs</button>
+                <button class="mode-btn active" data-mode="single" onclick="setScanMode('single')">🔍 Single IOC</button>
+                <button class="mode-btn" data-mode="bulk" onclick="setScanMode('bulk')">📄 Bulk IOCs</button>
             </div>
             <div class="input-group">
-                <label>Indicator (IOC)</label>
+                <label>Indicator</label>
                 <textarea id="iocInput" placeholder="Enter URL, IP, Domain, or Hash (MD5/SHA1/SHA256)"></textarea>
                 <small class="bulk-hint" style="display:none; color: var(--text-muted);">Enter one IOC per line (max 100 IOCs)</small>
             </div>
             <div class="input-group">
                 <label>Type</label>
                 <select id="iocType">
-                    <option value="auto">Auto-detect</option>
-                    <option value="url">URL</option>
-                    <option value="ip">IP Address</option>
-                    <option value="domain">Domain</option>
-                    <option value="hash">File Hash</option>
+                    <option value="auto">🌐 Auto-detect</option>
+                    <option value="url">🔗 URL</option>
+                    <option value="ip">🖥 IP Address</option>
+                    <option value="domain">🌍 Domain</option>
+                    <option value="hash"># File Hash</option>
                 </select>
             </div>
-            <button class="btn btn-primary scan-btn" onclick="startScan()">
+            <button class="btn btn-primary scan-btn" onclick="startScan()" style="background: var(--accent-blue); width: 100%;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
-                Scan
+                Investigate
             </button>
 
             <div class="recent-scans">
@@ -906,10 +1161,12 @@
         <!-- Results Panel -->
         <main class="results-panel">
             <div class="results-tabs">
-                <button class="tab-btn active" data-tab="vt" onclick="switchTab('vt')">VirusTotal</button>
-                <button class="tab-btn" data-tab="abuseipdb" onclick="switchTab('abuseipdb')">AbuseIPDB</button>
-                <button class="tab-btn" data-tab="combined" onclick="switchTab('combined')">Combined View</button>
-                <button class="tab-btn bulk-tab" data-tab="bulk" onclick="switchTab('bulk')" style="display:none;">Bulk Results</button>
+                <button class="tab-btn active" data-tab="vt" onclick="switchTab('vt')">🛡️ VirusTotal</button>
+                <button class="tab-btn" data-tab="abuseipdb" onclick="switchTab('abuseipdb')">🚔 AbuseIPDB</button>
+                <button class="tab-btn" data-tab="whois" onclick="switchTab('whois')">🌐 WHOIS</button>
+                <button class="tab-btn" data-tab="combined" onclick="switchTab('combined')">🔍 Combined Results & Analysis</button>
+                <button class="tab-btn bulk-tab" data-tab="bulk" onclick="switchTab('bulk')" style="display:none;">📊 Bulk</button>
+                <button class="tab-btn" data-tab="ipquery" onclick="switchTab('ipquery')">⚡ Quick Query</button>
             </div>
 
             <div id="vtTab" class="tab-content active">
@@ -932,8 +1189,171 @@
                 <div id="abuseipdbResults"></div>
             </div>
 
+            <div id="whoisTab" class="tab-content">
+                <div class="empty-state" id="whoisEmpty">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                    <span>Enter a domain or IP to view WHOIS information</span>
+                </div>
+                <div id="whoisResults"></div>
+            </div>
+
             <div id="combinedTab" class="tab-content">
                 <div id="combinedResults"></div>
+            </div>
+
+            <div id="ipqueryTab" class="tab-content">
+                <div class="ip-query-section">
+                    <h3 style="font-size: 16px; margin-bottom: 20px; color: var(--text-primary);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent-blue)" style="vertical-align: middle; margin-right: 8px;">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                        </svg>
+                        SIEM / EDR Query Generator
+                    </h3>
+
+                    <div class="input-group">
+                        <label>SIEM / EDR Platform</label>
+                        <select id="siemPlatform" onchange="generateQuery()">
+                            <option value="kibana">Kibana (KQL)</option>
+                            <option value="sentinel">Microsoft Sentinel (KQL)</option>
+                            <option value="crowdstrike">Crowdstrike (FQL)</option>
+                            <option value="cortex">Cortex (Lucene)</option>
+                            <option value="splunk">Splunk (SPL)</option>
+                            <option value="sentinelone">SentinelOne (S1QL)</option>
+                            <option value="qradar">IBM QRadar (AQL)</option>
+                            <option value="exabeam">Exabeam</option>
+                            <option value="logrhythm">LogRhythm</option>
+                            <option value="paloalto">Palo Alto X-SIAM (XQL)</option>
+                            <option value="sumologic">Sumo Logic</option>
+                            <option value="solarwinds">SolarWinds SIEM</option>
+                            <option value="alienvault">AlienVault (AT&T Cybersecurity)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>IP Addresses (one per line, supports 500+)</label>
+                        <textarea id="ipQueryInput" placeholder="Enter IP addresses, one per line...&#10;Example:&#10;192.168.1.1&#10;10.0.0.1&#10;172.16.0.1" oninput="generateQuery()"></textarea>
+                        <div class="ip-count">IP Count: <strong id="ipCount">0</strong></div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="ip-option-label">IP Field Selection</label>
+                        <div class="ip-option-group">
+                            <label class="radio-option selected" onclick="selectIPOption(this, 'source')">
+                                <input type="radio" name="ipField" value="source" checked>
+                                <span class="radio-custom"></span>
+                                <span>Source IP Only</span>
+                            </label>
+                            <label class="radio-option" onclick="selectIPOption(this, 'destination')">
+                                <input type="radio" name="ipField" value="destination">
+                                <span class="radio-custom"></span>
+                                <span>Destination IP Only</span>
+                            </label>
+                            <label class="radio-option" onclick="selectIPOption(this, 'both')">
+                                <input type="radio" name="ipField" value="both">
+                                <span class="radio-custom"></span>
+                                <span>Both (Source & Destination)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Port Filter (optional)</label>
+                        <select id="portSelect" onchange="generateQuery()">
+                            <option value="">No port filter</option>
+                            <optgroup label="Common Ports">
+                                <option value="80">HTTP (80)</option>
+                                <option value="443">HTTPS (443)</option>
+                                <option value="22">SSH (22)</option>
+                                <option value="21">FTP (21)</option>
+                                <option value="25">SMTP (25)</option>
+                                <option value="53">DNS (53)</option>
+                                <option value="3389">RDP (3389)</option>
+                                <option value="3306">MySQL (3306)</option>
+                                <option value="5432">PostgreSQL (5432)</option>
+                                <option value="6379">Redis (6379)</option>
+                                <option value="27017">MongoDB (27017)</option>
+                            </optgroup>
+                            <optgroup label="Other Ports">
+                                <option value="23">Telnet (23)</option>
+                                <option value="110">POP3 (110)</option>
+                                <option value="143">IMAP (143)</option>
+                                <option value="445">SMB (445)</option>
+                                <option value="389">LDAP (389)</option>
+                                <option value="636">LDAPS (636)</option>
+                                <option value="137">NetBIOS-NS (137)</option>
+                                <option value="138">NetBIOS-DGM (138)</option>
+                                <option value="139">NetBIOS-SSN (139)</option>
+                                <option value="161">SNMP (161)</option>
+                                <option value="162">SNMP Trap (162)</option>
+                                <option value="514">Syslog (514)</option>
+                                <option value="587">SMTP Submission (587)</option>
+                                <option value="993">IMAPS (993)</option>
+                                <option value="995">POP3S (995)</option>
+                                <option value="1433">MSSQL (1433)</option>
+                                <option value="1521">Oracle (1521)</option>
+                                <option value="5900">VNC (5900)</option>
+                                <option value="8080">HTTP Proxy (8080)</option>
+                                <option value="8443">HTTPS Alt (8443)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="ip-option-label">Port Field</label>
+                        <div class="ip-option-group">
+                            <label class="radio-option selected" onclick="selectPortField(this, 'noport')">
+                                <input type="radio" name="portField" value="noport" checked>
+                                <span class="radio-custom"></span>
+                                <span>No Port</span>
+                            </label>
+                            <label class="radio-option" onclick="selectPortField(this, 'dstport')">
+                                <input type="radio" name="portField" value="dstport">
+                                <span class="radio-custom"></span>
+                                <span>Destination Port</span>
+                            </label>
+                            <label class="radio-option" onclick="selectPortField(this, 'srcport')">
+                                <input type="radio" name="portField" value="srcport">
+                                <span class="radio-custom"></span>
+                                <span>Source Port</span>
+                            </label>
+                            <label class="radio-option" onclick="selectPortField(this, 'bothport')">
+                                <input type="radio" name="portField" value="bothport">
+                                <span class="radio-custom"></span>
+                                <span>Both Ports</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="query-preview">
+                        <div class="query-preview-header">
+                            <h4>Generated Query</h4>
+                            <button class="btn btn-sm" onclick="copyQuery()">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                </svg>
+                                Copy
+                            </button>
+                        </div>
+                        <textarea class="query-output" id="queryOutput" readonly>Enter IP addresses above to generate a query...</textarea>
+                    </div>
+
+                    <div class="query-actions">
+                        <button class="btn btn-primary" onclick="generateQuery()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                            </svg>
+                            Generate Query
+                        </button>
+                        <button class="btn" onclick="clearIPQuery()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                            </svg>
+                            Clear
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="export-bar" id="exportBar" style="display: none;">
@@ -970,6 +1390,11 @@
                     <label>AbuseIPDB API Key</label>
                     <input type="password" id="abuseipdbApiKey" placeholder="Enter your AbuseIPDB API key">
                     <small style="color: var(--text-muted);">Get your key from <a href="https://www.abuseipdb.com/account/api" target="_blank" style="color: var(--accent-blue);">abuseipdb.com</a></small>
+                </div>
+                <div class="input-group">
+                    <label>APILayer WHOIS API Key</label>
+                    <input type="password" id="whoisApiKey" placeholder="Enter your APILayer WHOIS API key">
+                    <small style="color: var(--text-muted);">Get your key from <a href="https://apilayer.com/marketplace/whois-api" target="_blank" style="color: var(--accent-blue);">apilayer.com</a></small>
                 </div>
             </div>
             <div class="modal-footer">
@@ -1016,12 +1441,12 @@
                 <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                     <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--accent-yellow);">Disclaimer</h4>
                     <p style="color: var(--text-secondary); font-size: 12px; line-height: 1.6;">
-                        The Threat Analyzer integrates publicly available threat intelligence from AbuseIPDB and VirusTotal to assist with security investigations. All information is sourced from third-party intelligence providers and is presented for research and defensive security purposes only. The maintainers of this tool do not guarantee the accuracy, completeness, or reliability of the data. This service is an independent project and is not affiliated with, sponsored by, or endorsed by AbuseIPDB, VirusTotal, or their respective organizations. Users should validate results through additional sources before making operational or security decisions.
+                        The Threat Analyzer integrates publicly available threat intelligence from AbuseIPDB, VirusTotal, and APILayer WHOIS to assist with security investigations. All information is sourced from third-party intelligence providers and is presented for research and defensive security purposes only. The maintainers of this tool do not guarantee the accuracy, completeness, or reliability of the data. This service is an independent project and is not affiliated with, sponsored by, or endorsed by AbuseIPDB, VirusTotal, APILayer, or their respective organizations. Users should validate results through additional sources before making operational or security decisions.
                     </p>
                 </div>
 
                 <div style="text-align: center; color: var(--text-muted); font-size: 12px;">
-                    &copy; 2026 Threat Analyzer | Threat intelligence powered by AbuseIPDB and VirusTotal
+                    &copy; 2026 Threat Analyzer | Threat intelligence powered by AbuseIPDB, VirusTotal, and APILayer WHOIS
                 </div>
             </div>
         </div>
@@ -1032,6 +1457,7 @@
         let currentResults = {
             vt: null,
             abuseipdb: null,
+            whois: null,
             ioc: '',
             type: ''
         };
@@ -1046,6 +1472,17 @@
             loadRecentScans();
             updateApiStatus();
             
+            // Check if first time user - show welcome prompt
+            const hasVisited = localStorage.getItem('threatscan_visited');
+            const keys = getKeys();
+            if (!hasVisited || (!keys.vt && !keys.abuse && !keys.whois)) {
+                // Show welcome banner
+                setTimeout(() => {
+                    showWelcomeBanner();
+                }, 500);
+                localStorage.setItem('threatscan_visited', 'true');
+            }
+            
             // Auto-detect IOC type
             document.getElementById('iocInput').addEventListener('input', (e) => {
                 const value = e.target.value.trim();
@@ -1054,6 +1491,114 @@
                     // Don't auto-select, just for reference
                 }
             });
+        });
+        
+        // Welcome Banner for new users
+        function showWelcomeBanner() {
+            // Create overlay
+            const overlay = document.createElement('div');
+            overlay.id = 'welcomeOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 9999;
+            `;
+            
+            const banner = document.createElement('div');
+            banner.id = 'welcomeBanner';
+            banner.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--bg-secondary);
+                border: 2px solid var(--accent-blue);
+                border-radius: 16px;
+                padding: 40px;
+                z-index: 10000;
+                max-width: 520px;
+                text-align: center;
+                box-shadow: 0 0 40px rgba(88, 166, 255, 0.4), inset 0 0 60px rgba(88, 166, 255, 0.05);
+                animation: modalEnter 0.3s ease-out;
+            `;
+            
+            banner.innerHTML = `
+                <style>
+                    @keyframes modalEnter {
+                        from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+                        to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                    }
+                </style>
+                <div style="margin-bottom: 24px;">
+                    <img src="mainlogo.png" style="width: 280px; height: 240px; margin-bottom: 12px; filter: drop-shadow(0 0 8px rgba(0,150,255,0.6));">
+                    <h2 style="color: #66b3ff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(0,150,255,0.4);">Welcome to ThreatScan</h2>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6; font-size: 15px;">
+                    Connect your threat intelligence providers by adding your API keys.
+                </p>
+                <div style="margin-bottom: 28px; text-align: left; background: rgba(88, 166, 255, 0.08); border-radius: 10px; padding: 16px 20px;">
+                    <p style="color: var(--accent-blue); margin: 0 0 12px 0; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Features</p>
+                    <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.8; font-size: 14px;">
+                        <li>✔ Scan URLs, IPs, and domains</li>
+                        <li>✔ Multi-source threat intelligence</li>
+                        <li>✔ Fast reputation lookups</li>
+                    </ul>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="openSettings(); closeWelcomeBanner();" 
+                        style="background: var(--accent-blue); color: white; border: none; padding: 14px 28px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        🔑 Configure API Keys
+                    </button>
+                    <button onclick="openFAQs(); closeWelcomeBanner();" 
+                        style="background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid rgba(255,255,255,0.1); padding: 14px 28px; border-radius: 8px; cursor: pointer; font-size: 15px; opacity: 0.8;">
+                        📚 View Documentation
+                    </button>
+                </div>
+                <p style="color: var(--text-muted); font-size: 12px; margin-top: 24px;">
+                    Press ESC to close
+                </p>
+            `;
+            
+            // Close function
+            window.closeWelcomeBanner = function() {
+                if (overlay.parentNode) overlay.remove();
+                if (banner.parentNode) banner.remove();
+            };
+            
+            // Close on overlay click
+            overlay.onclick = closeWelcomeBanner;
+            
+            // Close on escape key
+            document.addEventListener('keydown', function closeWelcome(e) {
+                if (e.key === 'Escape') {
+                    closeWelcomeBanner();
+                    document.removeEventListener('keydown', closeWelcome);
+                }
+            });
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(banner);
+        }
+        
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Enter to investigate
+            if (e.ctrlKey && e.key === 'Enter') {
+                const ioc = document.getElementById('iocInput').value.trim();
+                if (ioc) {
+                    investigateIOC();
+                }
+            }
+            // Ctrl+K to focus on IOC input
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('iocInput').focus();
+                document.getElementById('iocInput').select();
+            }
         });
 
         // IOC Type Detection
@@ -1122,19 +1667,25 @@
         function loadKeys() {
             const vtKey = localStorage.getItem('vt_api_key');
             const abuseipdbKey = localStorage.getItem('abuseipdb_api_key');
+            const whoisKey = localStorage.getItem('whois_api_key');
             if (vtKey) document.getElementById('vtApiKey').value = atob(vtKey);
             if (abuseipdbKey) document.getElementById('abuseipdbApiKey').value = atob(abuseipdbKey);
+            if (whoisKey) document.getElementById('whoisApiKey').value = atob(whoisKey);
         }
 
         function saveKeys() {
             const vtKey = document.getElementById('vtApiKey').value.trim();
             const abuseipdbKey = document.getElementById('abuseipdbApiKey').value.trim();
+            const whoisKey = document.getElementById('whoisApiKey').value.trim();
             
             if (vtKey) localStorage.setItem('vt_api_key', btoa(vtKey));
             else localStorage.removeItem('vt_api_key');
             
             if (abuseipdbKey) localStorage.setItem('abuseipdb_api_key', btoa(abuseipdbKey));
             else localStorage.removeItem('abuseipdb_api_key');
+            
+            if (whoisKey) localStorage.setItem('whois_api_key', btoa(whoisKey));
+            else localStorage.removeItem('whois_api_key');
             
             updateApiStatus();
             closeSettings();
@@ -1143,15 +1694,34 @@
         function clearKeys() {
             localStorage.removeItem('vt_api_key');
             localStorage.removeItem('abuseipdb_api_key');
+            localStorage.removeItem('whois_api_key');
             document.getElementById('vtApiKey').value = '';
             document.getElementById('abuseipdbApiKey').value = '';
+            document.getElementById('whoisApiKey').value = '';
             updateApiStatus();
+        }
+
+        // Toast Notification System
+        function showToast(message, type) {
+            type = type || 'info';
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.textContent = message;
+            container.appendChild(toast);
+            
+            // Auto-remove after 3 seconds
+            setTimeout(function() {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(function() { toast.remove(); }, 300);
+            }, 3000);
         }
 
         function getKeys() {
             return {
                 vt: localStorage.getItem('vt_api_key') ? atob(localStorage.getItem('vt_api_key')) : '',
-                abuseipdb: localStorage.getItem('abuseipdb_api_key') ? atob(localStorage.getItem('abuseipdb_api_key')) : ''
+                abuseipdb: localStorage.getItem('abuseipdb_api_key') ? atob(localStorage.getItem('abuseipdb_api_key')) : '',
+                whois: localStorage.getItem('whois_api_key') ? atob(localStorage.getItem('whois_api_key')) : ''
             };
         }
 
@@ -1159,6 +1729,7 @@
             const keys = getKeys();
             document.getElementById('vtStatus').classList.toggle('active', !!keys.vt);
             document.getElementById('abuseipdbStatus').classList.toggle('active', !!keys.abuseipdb);
+            document.getElementById('whoisStatus').classList.toggle('active', !!keys.whois);
         }
 
         // Modal
@@ -1187,11 +1758,11 @@
             }
         }
 
-        function saveRecentScan(ioc, type) {
+        function saveRecentScan(ioc, type, riskLevel = 'unknown') {
             const existing = recentScans.findIndex(s => s.ioc === ioc);
             if (existing >= 0) recentScans.splice(existing, 1);
             
-            recentScans.unshift({ ioc, type, timestamp: new Date().toISOString() });
+            recentScans.unshift({ ioc, type, riskLevel, timestamp: new Date().toISOString() });
             if (recentScans.length > 10) recentScans.pop();
             
             localStorage.setItem('recent_scans', JSON.stringify(recentScans));
@@ -1205,10 +1776,31 @@
                 return;
             }
             
+            // Get type icon
+            const getTypeIcon = (type) => {
+                return type === 'ip' ? '🖥' : type === 'domain' ? '📧' : type === 'url' ? '🌐' : type === 'hash' ? '📄' : '🔍';
+            };
+            
+            // Get risk color
+            const getRiskColor = (risk) => {
+                return risk === 'high' ? 'var(--accent-red)' : risk === 'medium' ? 'var(--accent-yellow)' : risk === 'low' ? 'var(--accent-green)' : 'var(--text-muted)';
+            };
+            
+            // Get risk icon
+            const getRiskIcon = (risk) => {
+                return risk === 'high' ? '🔴' : risk === 'medium' ? '🟡' : risk === 'low' ? '🟢' : '⚪';
+            };
+            
             container.innerHTML = recentScans.map(scan => `
                 <div class="recent-item" onclick="loadRecent('${scan.ioc.replace(/'/g, "\\'")}', '${scan.type}')">
-                    <span class="ioc">${scan.ioc}</span>
-                    <span class="type">${scan.type}</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 12px;">${getTypeIcon(scan.type)}</span>
+                        <span class="ioc">${scan.ioc}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 10px; color: var(--text-muted);">${scan.type.toUpperCase()}</span>
+                        <span style="font-size: 10px;">${getRiskIcon(scan.riskLevel)}</span>
+                    </div>
                 </div>
             `).join('');
         }
@@ -1248,6 +1840,516 @@
             }
         }
 
+        // IP Query Generator Functions
+        let selectedIPOption = 'source';
+        let selectedQueryLogic = 'or';
+        let selectedPortField = 'noport';
+
+        function selectIPOption(element, value) {
+            // Remove selected class from all options in this group
+            const parent = element.parentElement;
+            parent.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedIPOption = value;
+            generateQuery();
+        }
+
+        function selectQueryLogic(element, value) {
+            const parent = element.parentElement;
+            parent.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedQueryLogic = value;
+            generateQuery();
+        }
+
+        function selectPortField(element, value) {
+            const parent = element.parentElement;
+            parent.querySelectorAll('.radio-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedPortField = value;
+            generateQuery();
+        }
+
+        function generateQuery() {
+            const ipInput = document.getElementById('ipQueryInput').value;
+            const portSelect = document.getElementById('portSelect');
+            const port = portSelect.value;
+            const output = document.getElementById('queryOutput');
+            const ipCountEl = document.getElementById('ipCount');
+            const platform = document.getElementById('siemPlatform').value;
+
+            // Parse and validate IP addresses
+            const lines = ipInput.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            const ips = lines.filter(line => isValidIP(line));
+            
+            ipCountEl.textContent = ips.length;
+
+            if (ips.length === 0) {
+                output.textContent = 'Enter valid IP addresses above to generate a query...';
+                return;
+            }
+
+            // Generate query based on platform
+            let query = '';
+            switch(platform) {
+                case 'kibana':
+                    query = generateKibanaQuery(ips, port);
+                    break;
+                case 'sentinel':
+                    query = generateSentinelQuery(ips, port);
+                    break;
+                case 'crowdstrike':
+                    query = generateCrowdstrikeQuery(ips, port);
+                    break;
+                case 'cortex':
+                    query = generateCortexQuery(ips, port);
+                    break;
+                case 'splunk':
+                    query = generateSplunkQuery(ips, port);
+                    break;
+                case 'sentinelone':
+                    query = generateSentinelOneQuery(ips, port);
+                    break;
+                case 'qradar':
+                    query = generateQRadarQuery(ips, port);
+                    break;
+                case 'exabeam':
+                    query = generateExabeamQuery(ips, port);
+                    break;
+                case 'logrhythm':
+                    query = generateLogRhythmQuery(ips, port);
+                    break;
+                case 'paloalto':
+                    query = generatePaloAltoQuery(ips, port);
+                    break;
+                case 'sumologic':
+                    query = generateSumoLogicQuery(ips, port);
+                    break;
+                case 'solarwinds':
+                    query = generateSolarWindsQuery(ips, port);
+                    break;
+                case 'alienvault':
+                    query = generateAlienVaultQuery(ips, port);
+                    break;
+                default:
+                    query = generateKibanaQuery(ips, port);
+            }
+
+            output.value = query;
+        }
+
+        // Microsoft Sentinel (KQL)
+        function generateSentinelQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'SourceIP:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'DestinationIP:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+            } else {
+                const srcPart = 'SourceIP:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+                const dstPart = 'DestinationIP:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+                ipQueryPart = srcPart + ' OR ' + dstPart;
+            }
+
+            if (port) {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' | where DestinationPort == ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' | where SourcePort == ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' | where DestinationPort == ' + port + ' or SourcePort == ' + port;
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // Kibana (KQL)
+        function generateKibanaQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'srcip:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'dstip:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+            } else {
+                const srcPart = 'srcip:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+                const dstPart = 'dstip:(' + ips.map(ip => '"' + ip + '"').join(' OR ') + ')';
+                ipQueryPart = srcPart + ' OR ' + dstPart;
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dstport:"' + port + '"';
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND srcport:"' + port + '"';
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dstport:"' + port + '" OR srcport:"' + port + '")';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // Crowdstrike (FQL)
+        function generateCrowdstrikeQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = '(src_ip:(' + ips.join(' OR ') + '))';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = '(dst_ip:(' + ips.join(' OR ') + '))';
+            } else {
+                const srcPart = '(src_ip:(' + ips.join(' OR ') + '))';
+                const dstPart = '(dst_ip:(' + ips.join(' OR ') + '))';
+                ipQueryPart = srcPart + ' OR ' + dstPart;
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dst_port:' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND src_port:' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dst_port:' + port + ' OR src_port:' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // Cortex (Lucene)
+        function generateCortexQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'src_ip:(' + ips.join(' OR ') + ')';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'dst_ip:(' + ips.join(' OR ') + ')';
+            } else {
+                const srcPart = 'src_ip:(' + ips.join(' OR ') + ')';
+                const dstPart = 'dst_ip:(' + ips.join(' OR ') + ')';
+                ipQueryPart = srcPart + ' OR ' + dstPart;
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dst_port:' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND src_port:' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dst_port:' + port + ' OR src_port:' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // Splunk (SPL)
+        function generateSplunkQuery(ips, port) {
+            let ipQueryPart = '';
+            const ipList = ips.map(ip => '"' + ip + '"').join(', ');
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = '(src_ip IN (' + ipList + '))';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = '(dst_ip IN (' + ipList + '))';
+            } else {
+                ipQueryPart = '(src_ip IN (' + ipList + ') OR dst_ip IN (' + ipList + '))';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dst_port=' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND src_port=' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dst_port=' + port + ' OR src_port=' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // SentinelOne (S1QL)
+        function generateSentinelOneQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '")';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'dst_ip IN ("' + ips.join('", "') + '")';
+            } else {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '") OR dst_ip IN ("' + ips.join('", "') + '")';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dst_port = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND src_port = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dst_port = ' + port + ' OR src_port = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // IBM QRadar (AQL)
+        function generateQRadarQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = '(SRC_IP IN (' + ips.join(', ') + '))';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = '(DST_IP IN (' + ips.join(', ') + '))';
+            } else {
+                ipQueryPart = '(SRC_IP IN (' + ips.join(', ') + ') OR DST_IP IN (' + ips.join(', ') + '))';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND DST_PORT = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND SRC_PORT = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (DST_PORT = ' + port + ' OR SRC_PORT = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // Exabeam
+        function generateExabeamQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '")';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'dst_ip IN ("' + ips.join('", "') + '")';
+            } else {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '") OR dst_ip IN ("' + ips.join('", "') + '")';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dst_port = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND src_port = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dst_port = ' + port + ' OR src_port = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // LogRhythm
+        function generateLogRhythmQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'SourceIP = "' + ips.join('" OR SourceIP = "') + '"';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'DestinationIP = "' + ips.join('" OR DestinationIP = "') + '"';
+            } else {
+                ipQueryPart = '(SourceIP = "' + ips.join('" OR SourceIP = "') + '") OR (DestinationIP = "' + ips.join('" OR DestinationIP = "') + '")';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND DestinationPort = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND SourcePort = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (DestinationPort = ' + port + ' OR SourcePort = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // Palo Alto X-SIAM (XQL)
+        function generatePaloAltoQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '")';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'dst_ip IN ("' + ips.join('", "') + '")';
+            } else {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '") OR dst_ip IN ("' + ips.join('", "') + '")';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dst_port = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND src_port = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dst_port = ' + port + ' OR src_port = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // Sumo Logic
+        function generateSumoLogicQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = '_srcIp IN ("' + ips.join('", "') + '")';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = '_dstIp IN ("' + ips.join('", "') + '")';
+            } else {
+                ipQueryPart = '_srcIp IN ("' + ips.join('", "') + '") OR _dstIp IN ("' + ips.join('", "') + '")';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND _dstPort = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND _srcPort = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (_dstPort = ' + port + ' OR _srcPort = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // SolarWinds SIEM
+        function generateSolarWindsQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'SourceIP = "' + ips.join('" OR SourceIP = "') + '"';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'DestinationIP = "' + ips.join('" OR DestinationIP = "') + '"';
+            } else {
+                ipQueryPart = '(SourceIP = "' + ips.join('" OR SourceIP = "') + '") OR (DestinationIP = "' + ips.join('" OR DestinationIP = "') + '")';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND DestinationPort = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND SourcePort = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (DestinationPort = ' + port + ' OR SourcePort = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        // AlienVault (AT&T Cybersecurity)
+        function generateAlienVaultQuery(ips, port) {
+            let ipQueryPart = '';
+
+            if (selectedIPOption === 'source') {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '")';
+            } else if (selectedIPOption === 'destination') {
+                ipQueryPart = 'dst_ip IN ("' + ips.join('", "') + '")';
+            } else {
+                ipQueryPart = 'src_ip IN ("' + ips.join('", "') + '") OR dst_ip IN ("' + ips.join('", "') + '")';
+            }
+
+            if (port && selectedPortField !== 'noport') {
+                if (selectedPortField === 'dstport') {
+                    return ipQueryPart + ' AND dst_port = ' + port;
+                } else if (selectedPortField === 'srcport') {
+                    return ipQueryPart + ' AND src_port = ' + port;
+                } else if (selectedPortField === 'bothport') {
+                    return ipQueryPart + ' AND (dst_port = ' + port + ' OR src_port = ' + port + ')';
+                }
+            }
+            return ipQueryPart;
+        }
+
+        function isValidIP(ip) {
+            // Basic IPv4 validation
+            const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+            if (ipv4Regex.test(ip)) {
+                const parts = ip.split('.').map(Number);
+                return parts.every(part => part >= 0 && part <= 255);
+            }
+            // IPv6 validation (simplified)
+            const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+            return ipv6Regex.test(ip);
+        }
+
+        function copyQuery() {
+            const output = document.getElementById('queryOutput');
+            const query = output.value;
+            
+            if (!query || query.startsWith('Enter')) {
+                alert('Please generate a query first');
+                return;
+            }
+
+            navigator.clipboard.writeText(query).then(() => {
+                const btn = document.querySelector('.query-preview-header .btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        function clearIPQuery() {
+            // Just clear the input fields for analyst to start over
+            document.getElementById('ipQueryInput').value = '';
+            document.getElementById('ipCount').textContent = '0';
+            document.getElementById('queryOutput').value = '';
+        }
+
+        // Helper function to extract domain from URL
+        function extractDomain(input) {
+            // Remove protocol and path
+            let domain = input.trim().replace(/[\n\r]/g, '');
+            
+            // Remove protocol (http://, https://, etc.)
+            domain = domain.replace(/^https?:\/\//i, '');
+            
+            // Remove path, query string, and hash
+            domain = domain.split('/')[0];
+            domain = domain.split('?')[0];
+            domain = domain.split('#')[0];
+            
+            // Remove port number
+            domain = domain.split(':')[0];
+            
+            // Remove www. prefix for cleaner domain
+            if (domain.startsWith('www.')) {
+                domain = domain.substring(4);
+            }
+            
+            return domain;
+        }
+
+        // Helper function to extract base domain (removes subdomains)
+        function extractBaseDomain(domain) {
+            // Trim whitespace and newlines
+            domain = domain.trim().replace(/[\n\r]/g, '');
+            
+            const parts = domain.split('.');
+            // Common TLDs that need special handling
+            const commonTLDs = ['com', 'net', 'org', 'edu', 'gov', 'co', 'ac', 'or', 'ne', 'go', 'mil', 'ai', 'io', 'biz', 'info', 'me', 'cc', 'tv', 'ru', 'cn', 'de', 'uk', 'eu', 'jp'];
+            
+            // If domain has more than 2 parts, check if we need to combine first parts
+            if (parts.length > 2) {
+                const tld = parts[parts.length - 1];
+                const secondLevel = parts[parts.length - 2];
+                
+                // Check if second level is a common TLD modifier
+                if (commonTLDs.includes(secondLevel)) {
+                    // e.g., co.uk -> return last 3 parts
+                    return parts.slice(-3).join('.');
+                }
+                // Otherwise return last 2 parts (base domain)
+                return parts.slice(-2).join('.');
+            }
+            
+            return domain;
+        }
+
         // Main Scan Function
         async function startScan() {
             const input = document.getElementById('iocInput').value.trim();
@@ -1269,6 +2371,11 @@
             const ioc = input.trim();
             const type = typeSelect === 'auto' ? detectIOCType(ioc) : typeSelect;
             
+            // Show guidance for multiple IOCs in single mode
+            if (input.includes('\n') || (input.match(/\n/g) || []).length > 0) {
+                showToast('💡 Tip: Multiple IOCs detected. Switch to Bulk IOCs mode for better handling!', 'info');
+            }
+            
             if (type === 'unknown') {
                 alert('Unable to detect IOC type. Please select a type manually.');
                 return;
@@ -1283,6 +2390,7 @@
             // Show loading states
             showLoading('vt');
             showLoading('abuseipdb');
+            showLoading('whois');
 
             // Update export bar
             document.getElementById('exportBar').style.display = 'flex';
@@ -1296,13 +2404,29 @@
                 showError('vt', 'VirusTotal API key not configured');
             }
 
-            if (keys.abuseipdb && (type === 'ip' || type === 'auto')) {
+            if (keys.abuseipdb) {
+                // AbuseIPDB now supports domains/URLs via DNS resolution
+                // It will resolve domain to IP first, then query
                 scanAbuseIPDB(ioc);
             } else if (keys.abuseipdb) {
-                document.getElementById('abuseipdbResults').innerHTML = '<div class="error-message">AbuseIPDB primarily supports IP addresses</div>';
+                // AbuseIPDB API only supports IP addresses, not domains/URLs
+                document.getElementById('abuseipdbResults').innerHTML = '<div class="info-message">AbuseIPDB only supports IP addresses, not domains or URLs. Try scanning the IP address directly.</div>';
                 document.getElementById('abuseipdbEmpty').style.display = 'none';
             } else {
                 showError('abuseipdb', 'AbuseIPDB API key not configured');
+            }
+            
+            // WHOIS lookup - APILayer WHOIS only works for domains, not IPs
+            if (keys.whois && (type === 'domain' || type === 'url')) {
+                scanWhois(ioc);
+            } else if (keys.whois && type === 'ip') {
+                document.getElementById('whoisResults').innerHTML = '<div class="info-message">WHOIS lookup is not available for IP addresses (only domains)</div>';
+                document.getElementById('whoisEmpty').style.display = 'none';
+            } else if (keys.whois) {
+                document.getElementById('whoisResults').innerHTML = '<div class="info-message">WHOIS lookup is not available for this IOC type (only domains)</div>';
+                document.getElementById('whoisEmpty').style.display = 'none';
+            } else {
+                showError('whois', 'WHOIS API key not configured');
             }
             
             // Render combined view after both scans complete (with delay for async)
@@ -1316,14 +2440,31 @@
 
         // Bulk IOC Scan
         async function startBulkScan(input) {
-            const lines = input.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            // First split by newlines
+            const lines = input.split(/\r?\n/);
+            
+            // Then for each line, also split by commas
+            const iocs = [];
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return;
+                
+                // Split by commas if present
+                const parts = trimmed.split(',').map(p => p.trim()).filter(p => p);
+                parts.forEach(part => iocs.push(part));
+            });
             
             // Limit to 100 IOCs
-            const iocs = lines.slice(0, 100);
+            const validIocs = iocs.slice(0, 100);
             
-            if (iocs.length === 0) {
+            if (validIocs.length === 0) {
                 alert('Please enter at least one IOC to scan');
                 return;
+            }
+
+            // Show guidance for single IOC in bulk mode
+            if (validIocs.length === 1) {
+                showToast('💡 Tip: For a single IOC, switch to Single IOC mode for detailed results!', 'info');
             }
 
             const keys = getKeys();
@@ -1341,13 +2482,15 @@
             document.getElementById('exportBar').style.display = 'flex';
 
             // Render initial progress
-            renderBulkProgress(0, iocs.length);
+            renderBulkProgress(0, validIocs.length);
+
+            // Sleep helper function for rate limiting
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
 
             // Process each IOC
-            for (let i = 0; i < iocs.length; i++) {
-                const ioc = iocs[i];
-                const type = detectIOCType(ioc);
-                
+            async function processIOC(ioc, type, keys) {
                 // Get VirusTotal result
                 let vtResult = null;
                 let vtError = null;
@@ -1357,16 +2500,63 @@
                     vtError = e.message;
                 }
                 
-                // Get AbuseIPDB result for IPs only
+                // Get AbuseIPDB result for IPs only (API doesn't support domains/URLs)
+                // But now we resolve domains to IPs first
                 let abuseResult = null;
                 let abuseError = null;
-                if (keys.abuseipdb && type === 'ip') {
+                let ipToQuery = ioc;
+                
+                // Check if it's a hash - AbuseIPDB doesn't support hashes
+                if (type === 'hash') {
+                    // Skip AbuseIPDB for hashes - not supported
+                } else if (keys.abuseipdb && (type === 'domain' || type === 'url')) {
+                    // Resolve domain to IP first
+                    const domain = extractDomain(ioc);
+                    const resolvedIP = await resolveDNS(domain);
+                    if (resolvedIP) {
+                        ipToQuery = resolvedIP;
+                    }
+                }
+                
+                if (keys.abuseipdb && (type === 'ip' || type === 'domain' || type === 'url')) {
                     try {
-                        abuseResult = await scanAbuseIPDBBulk(ioc, keys.abuseipdb);
+                        abuseResult = await scanAbuseIPDBBulk(ipToQuery, keys.abuseipdb);
                     } catch (e) {
                         abuseError = e.message;
                     }
                 }
+                
+                // Get WHOIS result for domains and URLs only (not IPs)
+                let whoisResult = null;
+                let whoisError = null;
+                if (keys.whois && (type === 'domain' || type === 'url')) {
+                    try {
+                        whoisResult = await scanWhoisBulk(ioc, keys.whois);
+                    } catch (e) {
+                        whoisError = e.message;
+                    }
+                } else if (keys.whois && type === 'ip') {
+                    whoisResult = { notAvailable: 'WHOIS is not available for IP addresses' };
+                }
+                
+                return {
+                    vtResult,
+                    vtError,
+                    abuseResult,
+                    abuseError,
+                    whoisResult,
+                    whoisError,
+                    status: (vtError && !vtResult) ? 'error' : 'success'
+                };
+            }
+
+            // Process each IOC
+            for (let i = 0; i < validIocs.length; i++) {
+                const ioc = validIocs[i];
+                const type = detectIOCType(ioc);
+                
+                // Process with retry logic
+                const { vtResult, vtError, abuseResult, abuseError, whoisResult, whoisError } = await processIOC(ioc, type, keys);
                 
                 bulkResults.push({
                     ioc: ioc,
@@ -1375,11 +2565,20 @@
                     vtError: vtError,
                     abuseipdb: abuseResult,
                     abuseError: abuseError,
+                    whois: whoisResult,
+                    whoisError: whoisError,
                     status: (vtError && !vtResult) ? 'error' : 'success'
                 });
                 
                 bulkScanProgress = i + 1;
                 renderBulkProgress(bulkScanProgress, iocs.length);
+                
+                // Rate limiting: wait between requests to avoid blocking
+                // VirusTotal free tier allows ~4 requests per minute
+                // Add a delay of 1.5 seconds between each request
+                if (i < iocs.length - 1) {
+                    await sleep(1500);
+                }
             }
 
             // Render final results
@@ -1403,6 +2602,40 @@
                 const data = await response.json();
                 return data.data;
             } catch (error) {
+                return { error: error.message };
+            }
+        }
+
+        // Bulk WHOIS Scan
+        async function scanWhoisBulk(ioc, apiKey) {
+            try {
+                // Extract domain and get base domain for WHOIS
+                let domain = extractDomain(ioc);
+                const baseDomain = extractBaseDomain(domain);
+                
+                // Check for unsupported TLDs
+                const unsupportedTLDs = ['.onion', '.i2p', '.bit', '.zero', '.exit'];
+                const isUnsupportedTLD = unsupportedTLDs.some(tld => baseDomain.toLowerCase().endsWith(tld));
+                
+                if (isUnsupportedTLD) {
+                    return { error: 'WHOIS not supported for this TLD' };
+                }
+                
+                const response = await fetch(`https://api.apilayer.com/whois/query?domain=${encodeURIComponent(baseDomain)}`, {
+                    headers: {
+                        'APIKEY': apiKey
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText || 'Failed'}`);
+                }
+
+                const data = await response.json();
+                return data.result || null;
+            } catch (error) {
+                console.error('WHOIS Bulk Error:', error);
                 return { error: error.message };
             }
         }
@@ -1451,6 +2684,12 @@
                     if (response.status === 404) {
                         return { notFound: true, ioc: ioc };
                     }
+                    if (response.status === 400) {
+                        return { error: 'Bad request - check API key and URL format', ioc: ioc };
+                    }
+                    if (response.status === 429) {
+                        return { error: 'Rate limited - please wait and try again', ioc: ioc };
+                    }
                     throw new Error(`API error: ${response.status}`);
                 }
 
@@ -1464,6 +2703,12 @@
                     });
                     if (analysisResp.ok) {
                         return await analysisResp.json();
+                    } else if (analysisResp.status === 404) {
+                        // URL not found in database - return the submission response
+                        return { notFound: true, ioc: ioc, submissionData: data };
+                    } else {
+                        // Return error info but don't fail completely
+                        return { error: `Analysis API error: ${analysisResp.status}`, submissionData: data };
                     }
                 }
                 
@@ -1512,10 +2757,14 @@
                 let malCount = 0;
                 let abuseConfidence = 0;
                 
-                if (vtData && vtData.data) {
+                if (vtData && vtData.data && vtData.data.attributes && vtData.data.attributes.last_analysis_stats) {
                     const attrs = vtData.data.attributes;
                     const lastAnalysis = attrs.last_analysis_stats;
                     malCount = (lastAnalysis.malicious || 0) + (lastAnalysis.suspicious || 0);
+                } else if (vtData && vtData.error) {
+                    // Handle API errors gracefully
+                    errors++;
+                    return;
                 }
                 
                 if (abuseData && !abuseData.error) {
@@ -1535,7 +2784,7 @@
                 const getRisk = (r) => {
                     let malCount = 0;
                     let abuseConfidence = 0;
-                    if (r.vt && r.vt.data) {
+                    if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                         const stats = r.vt.data.attributes.last_analysis_stats;
                         malCount = (stats.malicious || 0) + (stats.suspicious || 0);
                     }
@@ -1611,12 +2860,12 @@
                 let abuseConf = 0;
                 
                 // VirusTotal
-                if (r.vt && r.vt.data) {
+                if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                     const stats = r.vt.data.attributes.last_analysis_stats;
                     const total = Object.values(stats).reduce((a, b) => a + b, 0);
                     malCount = (stats.malicious || 0) + (stats.suspicious || 0);
                     vtText = `${malCount}/${total} detections`;
-                } else if (r.vtError) {
+                } else if (r.vtError || (r.vt && r.vt.error)) {
                     vtText = 'Error';
                 }
                 
@@ -1668,7 +2917,7 @@
             let reports = 0;
             let total = 0;
             
-            if (r.vt && r.vt.data) {
+            if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                 const stats = r.vt.data.attributes.last_analysis_stats;
                 total = Object.values(stats).reduce((a, b) => a + b, 0);
                 malCount = (stats.malicious || 0) + (stats.suspicious || 0);
@@ -1693,7 +2942,7 @@
                 let reports = 0;
                 let total = 0;
                 
-                if (r.vt && r.vt.data) {
+                if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                     const stats = r.vt.data.attributes.last_analysis_stats;
                     total = Object.values(stats).reduce((a, b) => a + b, 0);
                     malCount = (stats.malicious || 0) + (stats.suspicious || 0);
@@ -1721,7 +2970,7 @@
             let recommendations = '';
             
             // VirusTotal data
-            if (r.vt && r.vt.data) {
+            if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                 const attrs = r.vt.data.attributes;
                 const lastAnalysis = attrs.last_analysis_stats;
                 const total = Object.values(lastAnalysis).reduce((a, b) => a + b, 0);
@@ -1729,7 +2978,7 @@
                 
                 vtDetection = `${malCount}/${total} detections`;
                 vtRisk = malCount > 10 ? 'HIGH' : malCount > 0 ? 'MEDIUM' : 'LOW';
-            } else if (r.vtError) {
+            } else if (r.vtError || (r.vt && r.vt.error)) {
                 vtDetection = 'Error';
             }
             
@@ -1745,7 +2994,7 @@
             let malCount = 0;
             let abuseConf = 0;
             
-            if (r.vt && r.vt.data) {
+            if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                 const stats = r.vt.data.attributes.last_analysis_stats;
                 malCount = (stats.malicious || 0) + (stats.suspicious || 0);
             }
@@ -1838,7 +3087,7 @@
                 let lastReportedAt = '-';
                 let isTor = '-';
                 
-                if (r.vt && r.vt.data) {
+                if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                     const stats = r.vt.data.attributes.last_analysis_stats;
                     malCount = (stats.malicious || 0) + (stats.suspicious || 0);
                 }
@@ -1866,6 +3115,207 @@
             downloadFile(csv, 'bulk_scan_results.csv', 'text/csv');
         }
 
+        // Export Single Result to TXT - SOC Report Format
+        function exportTXT() {
+            if (!currentResults.ioc) {
+                showToast('No results to export', 'warning');
+                return;
+            }
+            
+            const ioc = currentResults.ioc;
+            const type = currentResults.type || 'N/A';
+            
+            // Calculate threat intelligence
+            let vtMalicious = 0;
+            let vtTotal = 0;
+            let vtResult = 'No security vendors flagged the indicator as malicious';
+            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
+                const stats = currentResults.vt.data.attributes.last_analysis_stats;
+                vtTotal = Object.values(stats).reduce((a, b) => a + b, 0);
+                vtMalicious = stats.malicious + stats.suspicious;
+                if (vtMalicious > 0) {
+                    vtResult = vtMalicious + ' security vendors flagged the indicator as malicious';
+                }
+            }
+            
+            let abuseResult = 'No abuse reports were identified';
+            let abuseConfidence = 0;
+            let isWhitelisted = false;
+            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
+                abuseConfidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
+                const totalReports = currentResults.abuseipdb.totalReports || 0;
+                isWhitelisted = currentResults.abuseipdb.isWhitelisted || false;
+                if (isWhitelisted) {
+                    abuseResult = 'No abuse reports were identified and the IP is listed as whitelisted';
+                } else if (totalReports > 0) {
+                    abuseResult = totalReports + ' abuse reports were identified';
+                }
+            }
+            
+            // Determine threat reputation
+            let threatReputation = 'Inconclusive';
+            if (vtMalicious > 10 || abuseConfidence > 75) threatReputation = 'Malicious';
+            else if (vtMalicious > 0 || abuseConfidence > 50) threatReputation = 'Suspicious';
+            else if (vtMalicious === 0 && abuseConfidence === 0) threatReputation = 'Clean';
+            
+            // Domain age analysis
+            let domainAge = 'N/A';
+            let ageClassification = 'N/A';
+            let creationDate = null;
+            if (currentResults.whois && currentResults.whois.creation_date) {
+                creationDate = new Date(currentResults.whois.creation_date);
+                const ageMs = new Date() - creationDate;
+                const ageMonths = Math.floor(ageMs / (30.44 * 24 * 60 * 60 * 1000));
+                const ageYears = (ageMonths / 12).toFixed(1);
+                
+                if (ageMonths < 6) {
+                    ageClassification = 'Suspicious';
+                    domainAge = ageMonths + ' months';
+                } else if (ageMonths < 12) {
+                    ageClassification = 'Medium Suspicion';
+                    domainAge = ageMonths + ' months';
+                } else if (ageMonths < 24) {
+                    ageClassification = 'Low Risk';
+                    domainAge = ageYears + ' years';
+                } else {
+                    ageClassification = 'Low Risk / Neutral';
+                    domainAge = ageYears + ' years';
+                }
+            }
+            
+            // Infrastructure
+            let ipAddress = 'N/A';
+            let hostingProvider = 'N/A';
+            let asn = 'N/A';
+            let country = 'N/A';
+            let infraObservations = 'No infrastructure data available';
+            
+            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
+                ipAddress = currentResults.abuseipdb.ipAddress;
+                hostingProvider = currentResults.abuseipdb.isp || currentResults.abuseipdb.hostname || 'N/A';
+                asn = currentResults.abuseipdb.asn || 'N/A';
+                country = currentResults.abuseipdb.countryName || 'N/A';
+                
+                const hostingLower = hostingProvider.toLowerCase();
+                if (hostingLower.includes('amazon') || hostingLower.includes('aws') || 
+                    hostingLower.includes('google') || hostingLower.includes('cloud') ||
+                    hostingLower.includes('azure') || hostingLower.includes('microsoft')) {
+                    infraObservations = '• Hosted on major cloud provider\n• Cloud and internet service provider\n• No suspicious infrastructure indicators observed';
+                } else if (hostingLower.includes('ovh') || hostingLower.includes('digitalocean') || hostingLower.includes('linode')) {
+                    infraObservations = '• Hosted on cloud/virtualization platform\n• Could be legitimate or malicious use\n• Further investigation recommended';
+                } else {
+                    infraObservations = '• Hosting provider identified\n• Standard hosting profile\n• No obvious suspicious indicators';
+                }
+            }
+            
+            let infraAssessment = 'Unable to assess';
+            if (ipAddress !== 'N/A') {
+                if (threatReputation === 'Clean') infraAssessment = 'Legitimate';
+                else if (threatReputation === 'Malicious') infraAssessment = 'Potentially Suspicious - associated with malicious activity';
+                else infraAssessment = 'Further investigation needed';
+            }
+            
+            // Final verdict
+            let finalRiskRating = 'Medium Risk';
+            let conclusion = '';
+            
+            if (threatReputation === 'Malicious' || ageClassification === 'Suspicious') {
+                finalRiskRating = 'High Risk';
+                conclusion = 'Multiple indicators suggest malicious activity. Domain age is concerning and threat intelligence sources report malicious activity.';
+            } else if (threatReputation === 'Suspicious' || ageClassification === 'Medium Suspicion') {
+                finalRiskRating = 'Medium Risk';
+                conclusion = 'Some indicators require attention. Further investigation recommended before making security decisions.';
+            } else if (threatReputation === 'Clean' && ageClassification === 'Low Risk / Neutral') {
+                finalRiskRating = 'Low Risk';
+                conclusion = 'No malicious indicators were identified across WHOIS data, threat intelligence sources, or infrastructure analysis.';
+            } else {
+                finalRiskRating = 'Low Risk';
+                conclusion = 'No malicious indicators were identified.';
+            }
+            
+            // Build report
+            let txt = '';
+            txt += 'Indicator: ' + ioc + '\n';
+            txt += 'Investigation Type: Threat Intelligence / Infrastructure Analysis\n';
+            txt += '\n';
+            txt += '--------------------------------------------------\n';
+            txt += '\n';
+            txt += '1. Domain Age Analysis (WHOIS)\n';
+            txt += '\n';
+            if (creationDate) {
+                txt += 'The domain ' + ioc + ' was registered on ' + creationDate.toLocaleDateString('en-GB') + '. At the time of investigation, the domain age is approximately ' + domainAge + '.\n';
+            } else {
+                txt += 'WHOIS data not available for this indicator.\n';
+            }
+            txt += '\n';
+            txt += 'Domain Age Risk Classification:\n';
+            txt += '• < 6 months – Suspicious\n';
+            txt += '• 6–12 months – Medium Suspicion\n';
+            txt += '• > 12 months – Low Risk / Neutral\n';
+            txt += '\n';
+            txt += 'Assessment:\n';
+            txt += 'Domain age classification: ' + ageClassification + '.\n';
+            txt += '\n';
+            txt += '--------------------------------------------------\n';
+            txt += '\n';
+            txt += '2. Threat Intelligence Correlation\n';
+            txt += '\n';
+            txt += 'VirusTotal:\n';
+            txt += vtResult + '.\n';
+            txt += '\n';
+            txt += 'AbuseIPDB:\n';
+            txt += abuseResult + '.\n';
+            txt += '\n';
+            txt += 'Assessment:\n';
+            txt += 'Threat intelligence reputation is assessed as ' + threatReputation + '.\n';
+            txt += '\n';
+            txt += '--------------------------------------------------\n';
+            txt += '\n';
+            txt += '3. Infrastructure Analysis (ASN / Hosting)\n';
+            txt += '\n';
+            txt += 'IP Address: ' + ipAddress + '\n';
+            txt += 'Hosting Provider / Organization: ' + hostingProvider + '\n';
+            txt += 'ASN: ' + asn + '\n';
+            txt += 'Country: ' + country + '\n';
+            txt += '\n';
+            txt += 'Infrastructure Observations:\n';
+            txt += infraObservations + '\n';
+            txt += '\n';
+            txt += 'Assessment:\n';
+            txt += 'Infrastructure appears ' + infraAssessment + '.\n';
+            txt += '\n';
+            txt += '--------------------------------------------------\n';
+            txt += '\n';
+            txt += '4. Final Verdict\n';
+            txt += '\n';
+            txt += 'Final Risk Rating: ' + finalRiskRating + '\n';
+            txt += '\n';
+            txt += 'Conclusion:\n';
+            txt += 'Based on the analysis of domain age, threat intelligence reputation, and infrastructure context, ' + ioc + ' is assessed as ' + finalRiskRating + '. ' + conclusion + '\n';
+            txt += '\n';
+            txt += '--------------------------------------------------\n';
+            txt += '\n';
+            txt += '5. Analyst Reference Links\n';
+            txt += '\n';
+            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
+                txt += 'AbuseIPDB:\n';
+                txt += 'https://www.abuseipdb.com/check/' + currentResults.abuseipdb.ipAddress + '\n';
+            }
+            txt += 'VirusTotal:\n';
+            if (type === 'ip') {
+                txt += 'https://www.virustotal.com/gui/ip-address/' + ioc + '\n';
+            } else if (type === 'domain') {
+                txt += 'https://www.virustotal.com/gui/domain/' + ioc + '\n';
+            } else {
+                txt += 'https://www.virustotal.com/gui/search/' + ioc + '\n';
+            }
+            txt += 'WHOIS Lookup:\n';
+            txt += 'https://www.whois.com/whois/' + ioc + '\n';
+            
+            downloadFile(txt, 'threatscan_report.txt', 'text/plain');
+            showToast('Report exported!', 'success');
+        }
+
         // Export Bulk Results to TXT
         function exportBulkTXT() {
             let txt = 'BULK IOC SCAN RESULTS\n';
@@ -1879,7 +3329,7 @@
                 txt += `IOC: ${r.ioc}\n`;
                 txt += `Type: ${r.type}\n`;
                 
-                if (r.vt && r.vt.data) {
+                if (r.vt && r.vt.data && r.vt.data.attributes && r.vt.data.attributes.last_analysis_stats) {
                     const stats = r.vt.data.attributes.last_analysis_stats;
                     const total = Object.values(stats).reduce((a, b) => a + b, 0);
                     malCount = (stats.malicious || 0) + (stats.suspicious || 0);
@@ -1909,10 +3359,16 @@
 
         function showLoading(target) {
             const container = document.getElementById(target + 'Results');
+            let loadingText = '';
+            if (target === 'vt') loadingText = 'Scanning VirusTotal...';
+            else if (target === 'abuseipdb') loadingText = 'Scanning AbuseIPDB...';
+            else if (target === 'whois') loadingText = 'Querying WHOIS...';
+            else loadingText = `Scanning ${target}...`;
+            
             container.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    <span>Scanning ${target === 'vt' ? 'VirusTotal' : 'AbuseIPDB'}...</span>
+                    <span>${loadingText}</span>
                 </div>
             `;
             document.getElementById(target + 'Empty').style.display = 'none';
@@ -1924,7 +3380,7 @@
             document.getElementById(target + 'Empty').style.display = 'none';
         }
 
-        // CORS Proxy (use when direct API calls fail)
+        // CORS Proxy (fallback when direct API calls fail)
         const CORS_PROXY = 'https://corsproxy.io/?';
         
         // VirusTotal API
@@ -1952,19 +3408,35 @@
                         throw new Error('Unknown IOC type');
                 }
 
-                const response = await fetch(CORS_PROXY + encodeURIComponent(endpoint), {
-                    headers: {
-                        'x-apikey': keys.vt,
-                        'Content-Type': 'application/json'
-                    }
-                });
+                // Try direct API call first (no proxy)
+                let response;
+                try {
+                    response = await fetch(endpoint, {
+                        headers: {
+                            'x-apikey': keys.vt,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                } catch (directError) {
+                    // If direct fails, try with CORS proxy
+                    const proxyUrl = CORS_PROXY + encodeURIComponent(endpoint);
+                    response = await fetch(proxyUrl, {
+                        headers: {
+                            'x-apikey': keys.vt,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                }
 
                 if (!response.ok) {
                     if (response.status === 404) {
-                        throw new Error('No results found in VirusTotal');
+                        throw new Error('No results found in VirusTotal (404)');
                     }
                     if (response.status === 429) {
                         throw new Error('Rate limited - please wait and try again');
+                    }
+                    if (response.status === 403) {
+                        throw new Error('Access denied - check API key');
                     }
                     throw new Error(`API error: ${response.status}`);
                 }
@@ -1979,7 +3451,11 @@
                 }
 
             } catch (error) {
-                showError('vt', error.message);
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    showError('vt', 'Network error - check connection and try again');
+                } else {
+                    showError('vt', error.message);
+                }
             }
         }
 
@@ -2222,10 +3698,33 @@
         // AbuseIPDB API
         async function scanAbuseIPDB(ioc) {
             const keys = getKeys();
+            let ipToQuery = ioc;
+            let resolvedFromDomain = null;
 
             try {
+                // Check if input is a hash - AbuseIPDB doesn't support hash searches
+                const iocType = detectIOCType(ioc);
+                if (iocType === 'hash') {
+                    showError('abuseipdb', 'AbuseIPDB does not support hash searches. It only supports IP addresses and domains.');
+                    return;
+                }
+
+                // Check if input is a domain/URL and resolve to IP
+                if (iocType === 'domain' || iocType === 'url') {
+                    const domain = extractDomain(ioc);
+                    const resolvedIP = await resolveDNS(domain);
+                    if (resolvedIP) {
+                        resolvedFromDomain = domain;
+                        ipToQuery = resolvedIP;
+                        console.log(`Resolved ${domain} to ${resolvedIP}`);
+                    } else {
+                        showError('abuseipdb', `Could not resolve domain ${domain} to IP address`);
+                        return;
+                    }
+                }
+
                 // Query AbuseIPDB API
-                const response = await fetch(CORS_PROXY + encodeURIComponent(`https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ioc)}&maxAgeInDays=90&verbose=`), {
+                const response = await fetch(CORS_PROXY + encodeURIComponent(`https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ipToQuery)}&maxAgeInDays=90&verbose=`), {
                     headers: {
                         'Key': keys.abuseipdb,
                         'Accept': 'application/json'
@@ -2239,6 +3738,11 @@
                 const data = await response.json();
                 const ipData = data.data;
 
+                // Add resolved domain info to the result
+                if (resolvedFromDomain) {
+                    ipData.resolvedFrom = resolvedFromDomain;
+                }
+
                 currentResults.abuseipdb = ipData;
                 renderAbuseIPDB(ipData);
                 
@@ -2250,6 +3754,245 @@
             } catch (error) {
                 showError('abuseipdb', error.message);
             }
+        }
+
+        // DNS Resolution function
+        async function resolveDNS(domain) {
+            try {
+                // Use Google's DNS-over-HTTPS API
+                const response = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=A`);
+                if (!response.ok) {
+                    return null;
+                }
+                const data = await response.json();
+                
+                // Find first A record (IPv4)
+                if (data.Answer) {
+                    for (const answer of data.Answer) {
+                        if (answer.type === 1) { // Type 1 is A record
+                            return answer.data;
+                        }
+                    }
+                }
+                return null;
+            } catch (error) {
+                console.error('DNS resolution error:', error);
+                return null;
+            }
+        }
+
+        // WHOIS API (APILayer)
+        async function scanWhois(ioc) {
+            const keys = getKeys();
+            
+            // Extract domain from URL if needed
+            let domain = extractDomain(ioc);
+            
+            // Get base domain (removes subdomains) for WHOIS lookup
+            // WHOIS only works with base domains, not subdomains
+            const baseDomain = extractBaseDomain(domain);
+            console.log('WHOIS API Key present:', !!keys.whois, 'Key:', keys.whois ? keys.whois.substring(0, 5) + '...' : 'none', 'Domain:', baseDomain);
+            
+            // Check for unsupported TLDs
+            const unsupportedTLDs = ['.onion', '.i2p', '.bit', '.zero', '.exit'];
+            const isUnsupportedTLD = unsupportedTLDs.some(tld => baseDomain.toLowerCase().endsWith(tld));
+            
+            if (isUnsupportedTLD) {
+                showError('whois', 'WHOIS lookup not supported for this TLD (.onion domains use Tor network)');
+                return;
+            }
+
+            try {
+                // Query WHOIS API with base domain
+                const response = await fetch(`https://api.apilayer.com/whois/query?domain=${encodeURIComponent(baseDomain)}`, {
+                    headers: {
+                        'APIKEY': keys.whois
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to fetch WHOIS information'}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.result) {
+                    currentResults.whois = data.result;
+                    renderWhois(data.result);
+                    
+                    // Update combined view
+                    if (currentResults.vt) {
+                        renderCombined();
+                    }
+                } else {
+                    showError('whois', 'No WHOIS data found for this domain');
+                }
+
+            } catch (error) {
+                console.error('WHOIS Error:', error);
+                showError('whois', error.message);
+            }
+        }
+
+        function renderWhois(data) {
+            const container = document.getElementById('whoisResults');
+            
+            if (!data || !data.domain_name) {
+                container.innerHTML = '<div class="error-message">No WHOIS data available</div>';
+                document.getElementById('whoisEmpty').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('whoisEmpty').style.display = 'none';
+
+            // Parse dates
+            const creationDate = data.creation_date ? new Date(data.creation_date).toLocaleDateString() : 'N/A';
+            const expirationDate = data.expiration_date ? new Date(data.expiration_date).toLocaleDateString() : 'N/A';
+            const updatedDate = data.updated_date ? new Date(data.updated_date).toLocaleDateString() : 'N/A';
+
+            // Name servers
+            const nameServers = data.name_servers || [];
+
+            // Status
+            const status = data.status || [];
+
+            let html = `<div class="result-section">
+                <div class="result-card">
+                    <div class="card-header" onclick="toggleCard(this)">
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-blue)">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                            </svg>
+                            Domain Information
+                        </h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <tr>
+                                <th>Field</th>
+                                <th>Value</th>
+                            </tr>
+                            <tr>
+                                <td>Domain Name</td>
+                                <td>${data.domain_name || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td>Registrar</td>
+                                <td>${data.registrar || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td>Creation Date</td>
+                                <td>${creationDate}</td>
+                            </tr>
+                            <tr>
+                                <td>Expiration Date</td>
+                                <td>${expirationDate}</td>
+                            </tr>
+                            <tr>
+                                <td>Updated Date</td>
+                                <td>${updatedDate}</td>
+                            </tr>
+                            <tr>
+                                <td>DNSSEC</td>
+                                <td>${data.dnssec || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td>WHOIS Server</td>
+                                <td>${data.whois_server || 'N/A'}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>`;
+
+            // Registrant Info
+            if (data.name || data.org || data.address || data.city || data.state || data.country || data.registrant_postal_code) {
+                html += `<div class="result-card">
+                    <div class="card-header" onclick="toggleCard(this)">
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-purple)">
+                                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                            </svg>
+                            Registrant Information
+                        </h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="card-body">
+                        <table class="data-table">`;
+                if (data.name) html += `<tr><td>Name</td><td>${data.name}</td></tr>`;
+                if (data.org) html += `<tr><td>Organization</td><td>${data.org}</td></tr>`;
+                if (data.address) html += `<tr><td>Address</td><td>${data.address}</td></tr>`;
+                if (data.city) html += `<tr><td>City</td><td>${data.city}</td></tr>`;
+                if (data.state) html += `<tr><td>State</td><td>${data.state}</td></tr>`;
+                if (data.country) html += `<tr><td>Country</td><td>${data.country}</td></tr>`;
+                if (data.registrant_postal_code) html += `<tr><td>Postal Code</td><td>${data.registrant_postal_code}</td></tr>`;
+                html += `</table></div></div>`;
+            }
+
+            // Name Servers
+            if (nameServers.length > 0) {
+                html += `<div class="result-card">
+                    <div class="card-header" onclick="toggleCard(this)">
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-green)">
+                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+                            </svg>
+                            Name Servers (${nameServers.length})
+                        </h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="card-body">
+                        <ul style="list-style:none; padding:0;">`;
+                nameServers.forEach(ns => {
+                    html += `<li style="padding:8px 12px; background:var(--bg-primary); margin:4px 0; border-radius:4px; font-family:monospace;">${ns}</li>`;
+                });
+                html += `</ul></div></div>`;
+            }
+
+            // Status
+            if (status.length > 0) {
+                html += `<div class="result-card">
+                    <div class="card-header" onclick="toggleCard(this)">
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-yellow)">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                            </svg>
+                            Domain Status (${status.length})
+                        </h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="card-body">
+                        <ul style="list-style:none; padding:0; font-size:12px;">`;
+                status.forEach(s => {
+                    html += `<li style="padding:8px 12px; background:var(--bg-primary); margin:4px 0; border-radius:4px; word-break:break-all;">${s}</li>`;
+                });
+                html += `</ul></div></div>`;
+            }
+
+            // Emails
+            if (data.emails) {
+                const emails = Array.isArray(data.emails) ? data.emails : [data.emails];
+                html += `<div class="result-card">
+                    <div class="card-header" onclick="toggleCard(this)">
+                        <h3>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--accent-orange)">
+                                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                            </svg>
+                            Contact Emails
+                        </h3>
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="card-body">
+                        <ul style="list-style:none; padding:0;">`;
+                emails.forEach(email => {
+                    html += `<li style="padding:8px 12px; background:var(--bg-primary); margin:4px 0; border-radius:4px; font-family:monospace;">${email}</li>`;
+                });
+                html += `</ul></div></div>`;
+            }
+
+            html += '</div>';
+            container.innerHTML = html;
         }
 
         function renderAbuseIPDB(data) {
@@ -2398,65 +4141,409 @@
             };
             return categories[categoryId] || `Category ${categoryId}`;
         }
-
-        // Combined View
-        function renderCombined() {
-            const container = document.getElementById('combinedResults');
-            
-            if (!currentResults.vt && !currentResults.abuseipdb) {
-                container.innerHTML = '<div class="empty-state"><span>Run both scans to see combined analysis</span></div>';
+        
+        // Copy IOC to Clipboard
+        function copyIOC() {
+            if (!currentResults.ioc) {
+                showToast('No IOC to copy', 'warning');
                 return;
             }
+            navigator.clipboard.writeText(currentResults.ioc).then(function() {
+                showToast('IOC copied to clipboard!', 'success');
+            }).catch(function() {
+                showToast('Failed to copy IOC', 'error');
+            });
+        }
 
-            let html = '<h2 style="margin-bottom: 20px;">🔍 Combined Analysis</h2>';
-
-            // Calculate verdict based on both sources
+        // Copy Combined Results to Clipboard - SOC Report Format
+        function copyCombinedResults() {
+            if (!currentResults.ioc) {
+                showToast('No results to copy', 'warning');
+                return;
+            }
+            
+            const ioc = currentResults.ioc;
+            const type = currentResults.type || 'N/A';
+            
+            // Calculate threat intelligence
             let vtMalicious = 0;
             let vtTotal = 0;
+            let vtResult = 'No security vendors flagged the indicator as malicious';
             if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
                 const stats = currentResults.vt.data.attributes.last_analysis_stats;
                 vtTotal = Object.values(stats).reduce((a, b) => a + b, 0);
                 vtMalicious = stats.malicious + stats.suspicious;
+                if (vtMalicious > 0) {
+                    vtResult = vtMalicious + ' security vendors flagged the indicator as malicious';
+                }
+            }
+            
+            let abuseResult = 'No abuse reports were identified';
+            let abuseConfidence = 0;
+            let isWhitelisted = false;
+            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
+                abuseConfidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
+                const totalReports = currentResults.abuseipdb.totalReports || 0;
+                isWhitelisted = currentResults.abuseipdb.isWhitelisted || false;
+                if (isWhitelisted) {
+                    abuseResult = 'No abuse reports were identified and the IP is listed as whitelisted';
+                } else if (totalReports > 0) {
+                    abuseResult = totalReports + ' abuse reports were identified';
+                }
+            }
+            
+            // Determine threat reputation
+            let threatReputation = 'Inconclusive';
+            if (vtMalicious > 10 || abuseConfidence > 75) threatReputation = 'Malicious';
+            else if (vtMalicious > 0 || abuseConfidence > 50) threatReputation = 'Suspicious';
+            else if (vtMalicious === 0 && abuseConfidence === 0) threatReputation = 'Clean';
+            
+            // Domain age analysis
+            let domainAge = 'N/A';
+            let ageClassification = 'N/A';
+            let creationDate = null;
+            if (currentResults.whois && currentResults.whois.creation_date) {
+                creationDate = new Date(currentResults.whois.creation_date);
+                const ageMs = new Date() - creationDate;
+                const ageMonths = Math.floor(ageMs / (30.44 * 24 * 60 * 60 * 1000));
+                const ageYears = (ageMonths / 12).toFixed(1);
+                
+                if (ageMonths < 6) {
+                    ageClassification = 'Suspicious';
+                    domainAge = ageMonths + ' months';
+                } else if (ageMonths < 12) {
+                    ageClassification = 'Medium Suspicion';
+                    domainAge = ageMonths + ' months';
+                } else if (ageMonths < 24) {
+                    ageClassification = 'Low Risk';
+                    domainAge = ageYears + ' years';
+                } else {
+                    ageClassification = 'Low Risk / Neutral';
+                    domainAge = ageYears + ' years';
+                }
+            }
+            
+            // Infrastructure
+            let ipAddress = 'N/A';
+            let hostingProvider = 'N/A';
+            let asn = 'N/A';
+            let country = 'N/A';
+            let infraObservations = 'No infrastructure data available';
+            
+            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
+                ipAddress = currentResults.abuseipdb.ipAddress;
+                hostingProvider = currentResults.abuseipdb.isp || currentResults.abuseipdb.hostname || 'N/A';
+                asn = currentResults.abuseipdb.asn || 'N/A';
+                country = currentResults.abuseipdb.countryName || 'N/A';
+                
+                // Determine infrastructure assessment
+                const hostingLower = hostingProvider.toLowerCase();
+                if (hostingLower.includes('amazon') || hostingLower.includes('aws') || 
+                    hostingLower.includes('google') || hostingLower.includes('cloud') ||
+                    hostingLower.includes('azure') || hostingLower.includes('microsoft')) {
+                    infraObservations = '• Hosted on major cloud provider\n• Cloud and internet service provider\n• No suspicious infrastructure indicators observed';
+                } else if (hostingLower.includes('ovh') || hostingLower.includes('digitalocean') || hostingLower.includes('linode')) {
+                    infraObservations = '• Hosted on cloud/virtualization platform\n• Could be legitimate or malicious use\n• Further investigation recommended';
+                } else {
+                    infraObservations = '• Hosting provider identified\n• Standard hosting profile\n• No obvious suspicious indicators';
+                }
+            }
+            
+            // Determine infrastructure assessment
+            let infraAssessment = 'Unable to assess';
+            if (ipAddress !== 'N/A') {
+                if (threatReputation === 'Clean') infraAssessment = 'Legitimate';
+                else if (threatReputation === 'Malicious') infraAssessment = 'Potentially Suspicious - associated with malicious activity';
+                else infraAssessment = 'Further investigation needed';
+            }
+            
+            // Final verdict
+            let finalRiskRating = 'Medium Risk';
+            let conclusion = '';
+            
+            if (threatReputation === 'Malicious' || ageClassification === 'Suspicious') {
+                finalRiskRating = 'High Risk';
+                conclusion = 'Multiple indicators suggest malicious activity. Domain age is concerning and threat intelligence sources report malicious activity.';
+            } else if (threatReputation === 'Suspicious' || ageClassification === 'Medium Suspicion') {
+                finalRiskRating = 'Medium Risk';
+                conclusion = 'Some indicators require attention. Further investigation recommended before making security decisions.';
+            } else if (threatReputation === 'Clean' && ageClassification === 'Low Risk / Neutral') {
+                finalRiskRating = 'Low Risk';
+                conclusion = 'No malicious indicators were identified across WHOIS data, threat intelligence sources, or infrastructure analysis.';
+            } else {
+                finalRiskRating = 'Low Risk';
+                conclusion = 'No malicious indicators were identified.';
+            }
+            
+            // Build report
+            let report = '';
+            report += 'Indicator: ' + ioc + '\n';
+            report += 'Investigation Type: Threat Intelligence / Infrastructure Analysis\n';
+            report += '\n';
+            report += '--------------------------------------------------\n';
+            report += '\n';
+            report += '1. Domain Age Analysis (WHOIS)\n';
+            report += '\n';
+            if (creationDate) {
+                report += 'The domain ' + ioc + ' was registered on ' + creationDate.toLocaleDateString('en-GB') + '. At the time of investigation, the domain age is approximately ' + domainAge + '.\n';
+            } else {
+                report += 'WHOIS data not available for this indicator.\n';
+            }
+            report += '\n';
+            report += 'Domain Age Risk Classification:\n';
+            report += '• < 6 months – Suspicious\n';
+            report += '• 6–12 months – Medium Suspicion\n';
+            report += '• > 12 months – Low Risk / Neutral\n';
+            report += '\n';
+            report += 'Assessment:\n';
+            report += 'Domain age classification: ' + ageClassification + '.\n';
+            report += '\n';
+            report += '--------------------------------------------------\n';
+            report += '\n';
+            report += '2. Threat Intelligence Correlation\n';
+            report += '\n';
+            report += 'VirusTotal:\n';
+            report += vtResult + '.\n';
+            report += '\n';
+            report += 'AbuseIPDB:\n';
+            report += abuseResult + '.\n';
+            report += '\n';
+            report += 'Assessment:\n';
+            report += 'Threat intelligence reputation is assessed as ' + threatReputation + '.\n';
+            report += '\n';
+            report += '--------------------------------------------------\n';
+            report += '\n';
+            report += '3. Infrastructure Analysis (ASN / Hosting)\n';
+            report += '\n';
+            report += 'IP Address: ' + ipAddress + '\n';
+            report += 'Hosting Provider / Organization: ' + hostingProvider + '\n';
+            report += 'ASN: ' + asn + '\n';
+            report += 'Country: ' + country + '\n';
+            report += '\n';
+            report += 'Infrastructure Observations:\n';
+            report += infraObservations + '\n';
+            report += '\n';
+            report += 'Assessment:\n';
+            report += 'Infrastructure appears ' + infraAssessment + '.\n';
+            report += '\n';
+            report += '--------------------------------------------------\n';
+            report += '\n';
+            report += '4. Final Verdict\n';
+            report += '\n';
+            report += 'Final Risk Rating: ' + finalRiskRating + '\n';
+            report += '\n';
+            report += 'Conclusion:\n';
+            report += 'Based on the analysis of domain age, threat intelligence reputation, and infrastructure context, ' + ioc + ' is assessed as ' + finalRiskRating + '. ' + conclusion + '\n';
+            report += '\n';
+            report += '--------------------------------------------------\n';
+            report += '\n';
+            report += '5. Analyst Reference Links\n';
+            report += '\n';
+            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
+                report += 'AbuseIPDB:\n';
+                report += 'https://www.abuseipdb.com/check/' + currentResults.abuseipdb.ipAddress + '\n';
+            }
+            report += 'VirusTotal:\n';
+            if (type === 'ip') {
+                report += 'https://www.virustotal.com/gui/ip-address/' + ioc + '\n';
+            } else if (type === 'domain') {
+                report += 'https://www.virustotal.com/gui/domain/' + ioc + '\n';
+            } else {
+                report += 'https://www.virustotal.com/gui/search/' + ioc + '\n';
+            }
+            report += 'WHOIS Lookup:\n';
+            report += 'https://www.whois.com/whois/' + ioc + '\n';
+            
+            navigator.clipboard.writeText(report).then(function() {
+                showToast('Report copied to clipboard!', 'success');
+            }).catch(function() {
+                showToast('Failed to copy report', 'error');
+            });
+        }
+
+        // Combined View - SOC Professional Dashboard
+        function renderCombined() {
+            const container = document.getElementById('combinedResults');
+            
+            if (!currentResults.vt && !currentResults.abuseipdb && !currentResults.whois) {
+                container.innerHTML = '<div class="empty-state"><span>Run scans to see combined analysis</span></div>';
+                return;
+            }
+
+            // Calculate threat score
+            let vtMalicious = 0;
+            let vtTotal = 0;
+            let vtScore = 0;
+            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
+                const stats = currentResults.vt.data.attributes.last_analysis_stats;
+                vtTotal = Object.values(stats).reduce((a, b) => a + b, 0);
+                vtMalicious = stats.malicious + stats.suspicious;
+                vtScore = vtTotal > 0 ? Math.round((vtMalicious / vtTotal) * 100) : 0;
             }
             
             let abuseConfidence = 0;
             if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
                 abuseConfidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
             }
-
+            
+            // Combined threat score (0-100)
+            const threatScore = Math.min(100, vtScore + abuseConfidence);
+            
             // Determine verdict
             let verdict = '';
             let verdictColor = '';
             let verdictIcon = '';
             
-            if (vtMalicious > 10 || abuseConfidence > 75) {
-                verdict = 'HIGH RISK - MALICIOUS';
+            if (threatScore >= 50) {
+                verdict = 'HIGH RISK';
                 verdictColor = 'var(--accent-red)';
-                verdictIcon = '🚨';
-            } else if (vtMalicious > 0 || abuseConfidence > 50) {
+                verdictIcon = '🔴';
+            } else if (threatScore > 10 || abuseConfidence > 25) {
                 verdict = 'SUSPICIOUS';
                 verdictColor = 'var(--accent-yellow)';
-                verdictIcon = '⚠️';
-            } else if (vtMalicious === 0 && abuseConfidence === 0) {
-                verdict = 'LOW RISK - CLEAN';
-                verdictColor = 'var(--accent-green)';
-                verdictIcon = '✅';
+                verdictIcon = '🟡';
             } else {
-                verdict = 'UNKNOWN';
-                verdictColor = 'var(--text-muted)';
-                verdictIcon = '❓';
+                verdict = 'LOW RISK';
+                verdictColor = 'var(--accent-green)';
+                verdictIcon = '🟢';
             }
 
-            // Summary with verdict
-            html += '<div class="result-card" style="border-left: 4px solid ' + verdictColor + ';"><div class="card-header"><h3>' + verdictIcon + ' Threat Verdict</h3></div><div class="card-body">';
-            html += '<p style="font-size: 18px; font-weight: bold; color: ' + verdictColor + ';">' + verdict + '</p>';
-            html += '<p style="color: var(--text-muted); font-size: 12px; margin-top: 8px;">⚖️ <strong>Disclaimer:</strong> This verdict is based on automated threat intelligence data and should NOT be used as the sole basis for security decisions. False positives are possible. Always verify with additional context and manual analysis. The expertise of a trained analyst is strongly recommended before taking any action.</p>';
+            let html = '';
+            
+            // Get IOC type icon
+            const typeIcon = currentResults.type === 'ip' ? '🖥' : currentResults.type === 'domain' ? '📧' : currentResults.type === 'url' ? '🌐' : currentResults.type === 'hash' ? '📄' : '🔍';
+            
+            // Mini IOC Header Bar - Redesigned with prominent threat verdict
+            html += '<div style="background: var(--bg-secondary); border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid var(--border);">';
+            
+            // Top row: IOC and Type
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">';
+            html += '<div style="display: flex; align-items: center; gap: 10px;">';
+            html += '<span style="font-size: 24px;">' + typeIcon + '</span>';
+            html += '<span style="font-size: 22px; font-weight: bold; color: var(--text-primary);">' + currentResults.ioc + '</span>';
+            html += '<button onclick="copyIOC()" style="background: transparent; border: none; cursor: pointer; font-size: 14px; padding: 4px;" title="Copy IOC">📋</button>';
+            html += '</div>';
+            html += '</div>';
+            
+            // Threat Verdict Badge Card
+            html += '<div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: stretch;">';
+            
+            // Verdict Badge
+            html += '<div style="flex: 1; min-width: 150px; background: ' + verdictColor + '22; border: 2px solid ' + verdictColor + '; border-radius: 10px; padding: 16px; text-align: center;">';
+            html += '<div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">🛡️ Threat Verdict</div>';
+            html += '<div style="font-size: 24px; font-weight: bold; color: ' + verdictColor + ';">' + verdictIcon + ' ' + verdict + '</div>';
+            html += '</div>';
+            
+            // Threat Score Meter - More prominent
+            html += '<div style="flex: 1; min-width: 180px; background: var(--bg-tertiary); border-radius: 10px; padding: 16px;">';
+            html += '<div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; text-align: center;">⚡ Risk Score</div>';
+            const meterWidth = Math.min(100, threatScore);
+            const meterColor = threatScore >= 50 ? 'var(--accent-red)' : threatScore > 10 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+            html += '<div style="background: var(--bg-secondary); border-radius: 6px; height: 12px; width: 100%; overflow: hidden; margin-bottom: 8px;">';
+            html += '<div style="background: linear-gradient(90deg, ' + meterColor + ', ' + meterColor + 'aa); height: 100%; width: ' + meterWidth + '%; border-radius: 6px; transition: width 0.3s ease;"></div>';
+            html += '</div>';
+            html += '<div style="font-size: 20px; font-weight: bold; color: ' + meterColor + '; text-align: center;">' + threatScore + ' / 100</div>';
+            html += '</div>';
+            
+            // IOC Type Badge
+            html += '<div style="min-width: 100px; background: var(--bg-tertiary); border-radius: 10px; padding: 16px; text-align: center;">';
+            html += '<div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">📌 Type</div>';
+            html += '<div style="font-size: 16px; font-weight: bold; color: var(--text-primary);">' + typeIcon + ' ' + (currentResults.type || 'N/A').toUpperCase() + '</div>';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            // Sources indicator
+            html += '<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted);">';
+            let sources = [];
+            if (currentResults.vt) sources.push('VirusTotal');
+            if (currentResults.abuseipdb) sources.push('AbuseIPDB');
+            if (currentResults.whois) sources.push('WHOIS');
+            html += '📡 Sources: ' + sources.join(' | ');
+            html += '</div>';
+            html += '</div>';
+            
+            // Quick Actions Panel - Better organized
+            html += '<div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">';
+            html += '<button onclick="copyIOC()" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; color: var(--text-primary); font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">📋 Copy IOC</button>';
+            html += '<button onclick="copyCombinedResults()" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; color: var(--text-primary); font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">📄 Copy Report</button>';
+            html += '<button onclick="exportTXT()" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; color: var(--text-primary); font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">💾 Export</button>';
+            html += '</div>';
+
+            // Intelligence Summary Cards - Integration style
+            html += '<div style="margin-bottom: 20px;">';
+            html += '<h3 style="color: var(--text-primary); margin-bottom: 12px; font-size: 14px;">🎯 Intelligence Sources</h3>';
+            html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">';
+            
+            // VirusTotal Card
+            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
+                const stats = currentResults.vt.data.attributes.last_analysis_stats;
+                const malicious = stats.malicious + stats.suspicious;
+                const vtTotal = Object.values(stats).reduce((a, b) => a + b, 0);
+                const vtColor = malicious > 10 ? 'var(--accent-red)' : malicious > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+                html += '<div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 14px; border-left: 3px solid ' + vtColor + ';">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+                html += '<span style="font-weight: bold; color: var(--text-primary);">🦠 VirusTotal</span>';
+                html += '<span style="background: ' + vtColor + '22; color: ' + vtColor + '; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + malicious + '/' + vtTotal + '</span>';
+                html += '</div>';
+                html += '<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Detections</div>';
+                html += '<button onclick="openVirusTotal\'' + currentResults.ioc + '\'" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; padding: 6px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">🔗 Open Report</button>';
+                html += '</div>';
+            }
+            
+            // AbuseIPDB Card
+            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
+                const confidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
+                const abuseColor = confidence > 75 ? 'var(--accent-red)' : confidence > 50 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+                html += '<div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 14px; border-left: 3px solid ' + abuseColor + ';">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+                html += '<span style="font-weight: bold; color: var(--text-primary);">🚔 AbuseIPDB</span>';
+                html += '<span style="background: ' + abuseColor + '22; color: ' + abuseColor + '; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">' + confidence + '%</span>';
+                html += '</div>';
+                html += '<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">Confidence Score</div>';
+                html += '<button onclick="openAbuseIPDB\'' + currentResults.ioc + '\'" style="width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 4px; padding: 6px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">🔗 View Intelligence</button>';
+                html += '</div>';
+            }
+            
+            // WHOIS Card
+            if (currentResults.whois && currentResults.whois.domain_name) {
+                html += '<div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 14px; border-left: 3px solid var(--accent-blue);">';
+                html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
+                html += '<span style="font-weight: bold; color: var(--text-primary);">🌐 WHOIS</span>';
+                html += '<span style="background: var(--accent-blue)22; color: var(--accent-blue); padding: 2px 8px; border-radius: 4px; font-size: 11px;">' + (currentResults.whois.registrar ? 'Registered' : 'N/A') + '</span>';
+                html += '</div>';
+                html += '<div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">' + (currentResults.whois.registrar || 'No data') + '</div>';
+                html += '</div>';
+            }
+            
             html += '</div></div>';
 
-            // Summary details
+            // Summary with badges - Compact
+            html += '<div class="result-card" style="border-left: 4px solid ' + verdictColor + ';"><div class="card-header"><h3>' + verdictIcon + ' Summary</h3></div><div class="card-body" style="padding: 12px;">';
+            html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
+                const stats = currentResults.vt.data.attributes.last_analysis_stats;
+                const malicious = stats.malicious + stats.suspicious;
+                const vtBadge = malicious > 10 ? 'malicious' : malicious > 0 ? 'suspicious' : 'clean';
+                html += '<span class="category-badge ' + vtBadge + '" style="padding: 4px 10px; border-radius: 4px; font-size: 11px;">🦠 VT: ' + malicious + '/' + vtTotal + '</span>';
+            }
+            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
+                const confidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
+                const abuseBadge = confidence > 75 ? 'malicious' : confidence > 50 ? 'suspicious' : 'clean';
+                html += '<span class="category-badge ' + abuseBadge + '" style="padding: 4px 10px; border-radius: 4px; font-size: 11px;">🚔 AbuseIPDB: ' + confidence + '%</span>';
+            }
+            if (currentResults.whois && currentResults.whois.domain_name) {
+                html += '<span class="category-badge" style="background: var(--bg-tertiary); padding: 4px 10px; border-radius: 4px; font-size: 11px;">🌐 ' + (currentResults.whois.registrar || 'WHOIS') + '</span>';
+            }
+            html += '</div></div></div>';
+            html += '</div></div>';
+
+            // Summary details with badges
             html += '<div class="result-card"><div class="card-header"><h3>📊 Summary</h3></div><div class="card-body">';
-            html += `<p><strong>IOC:</strong> ${currentResults.ioc || 'N/A'}</p>`;
-            html += `<p><strong>Type:</strong> ${currentResults.type || 'N/A'}</p>`;
+            html += '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">';
+            html += '<span class="category-badge" style="background: var(--bg-tertiary); padding: 4px 10px; border-radius: 4px; font-size: 12px;">📌 IOC: <strong>' + (currentResults.ioc || 'N/A') + '</strong></span>';
+            html += '<span class="category-badge" style="background: var(--bg-tertiary); padding: 4px 10px; border-radius: 4px; font-size: 12px;">🏷️ Type: <strong>' + (currentResults.type || 'N/A') + '</strong></span>';
+            html += '</div>';
             
             if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
                 const stats = currentResults.vt.data.attributes.last_analysis_stats;
@@ -2464,79 +4551,83 @@
                 const malicious = stats.malicious + stats.suspicious;
                 const severity = malicious > 10 ? 'HIGH' : malicious > 0 ? 'MEDIUM' : 'LOW';
                 const severityColor = malicious > 10 ? 'var(--accent-red)' : malicious > 0 ? 'var(--accent-yellow)' : 'var(--accent-green)';
-                html += `<p><strong>VirusTotal:</strong> ${malicious}/${total} detections <span style="color: ${severityColor}; font-weight: bold;">(${severity} RISK)</span></p>`;
+                const vtBadge = malicious > 10 ? 'malicious' : malicious > 0 ? 'suspicious' : 'clean';
+                html += '<span class="category-badge ' + vtBadge + '" style="padding: 4px 10px; border-radius: 4px; font-size: 12px;">🦠 VirusTotal: ' + malicious + '/' + total + ' (' + severity + ' RISK)</span>';
             }
             
             if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
                 const confidence = currentResults.abuseipdb.abuseConfidenceScore || 0;
                 const reports = currentResults.abuseipdb.totalReports || 0;
                 const confidenceColor = confidence > 75 ? 'var(--accent-red)' : confidence > 50 ? 'var(--accent-yellow)' : 'var(--accent-green)';
-                html += `<p><strong>AbuseIPDB:</strong> Confidence Score <span style="color: ${confidenceColor}; font-weight: bold;">${confidence}%</span> (${reports} reports)</p>`;
+                const abuseBadge = confidence > 75 ? 'malicious' : confidence > 50 ? 'suspicious' : 'clean';
+                html += '<span class="category-badge ' + abuseBadge + '" style="padding: 4px 10px; border-radius: 4px; font-size: 12px;">🚔 AbuseIPDB: ' + confidence + '% (' + reports + ' reports)</span>';
+            }
+            
+            // WHOIS Information
+            if (currentResults.whois && currentResults.whois.domain_name) {
+                html += '<span class="category-badge" style="background: var(--bg-tertiary); padding: 4px 10px; border-radius: 4px; font-size: 12px;">🌐 WHOIS: ' + (currentResults.whois.registrar || 'N/A') + '</span>';
             }
             html += '</div></div>';
 
-            // Cross-reference
-            html += '<div class="result-card"><div class="card-header" onclick="toggleCard(this)"><h3>🔗 Cross-Reference - IP from AbuseIPDB</h3><span>▼</span></div><div class="card-body">';
+            // Cross-reference with clickable buttons
+            html += '<div class="result-card"><div class="card-header"><h3>🔗 Investigate Further</h3></div><div class="card-body" style="padding: 12px;">';
+            html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
             
             if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
                 const ip = currentResults.abuseipdb.ipAddress;
-                html += '<p>Investigate this IP in VirusTotal:</p>';
-                html += '<div style="margin: 12px 0;">';
-                html += `<span class="ioc-tag" onclick="loadRecent('${ip}', 'ip'); startScan();">${ip}</span>`;
-                html += '</div>';
-                
-                if (currentResults.abuseipdb.isp) {
-                    html += `<p><strong>ISP:</strong> ${currentResults.abuseipdb.isp}</p>`;
-                }
-                if (currentResults.abuseipdb.countryName) {
-                    html += `<p><strong>Country:</strong> ${currentResults.abuseipdb.countryName}</p>`;
-                }
+                html += '<a href="https://www.abuseipdb.com/check/' + ip + '" target="_blank" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">🚔 AbuseIPDB</a>';
             }
             
+            if (currentResults.ioc) {
+                let vtUrl = '';
+                if (currentResults.type === 'ip') {
+                    vtUrl = 'https://www.virustotal.com/gui/ip-address/' + currentResults.ioc;
+                } else if (currentResults.type === 'domain') {
+                    vtUrl = 'https://www.virustotal.com/gui/domain/' + currentResults.ioc;
+                } else {
+                    vtUrl = 'https://www.virustotal.com/gui/search/' + currentResults.ioc;
+                }
+                html += '<a href="' + vtUrl + '" target="_blank" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">🦠 VirusTotal</a>';
+                html += '<a href="https://www.whois.com/whois/' + currentResults.ioc + '" target="_blank" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); text-decoration: none; font-size: 11px; display: inline-flex; align-items: center; gap: 4px;">🌐 WHOIS</a>';
+            }
+            
+            html += '</div>';
             html += '</div></div>';
 
-            // Evidence and Analysis
-            html += '<div class="result-card"><div class="card-header" onclick="toggleCard(this)"><h3>📋 Evidence & Analysis</h3><span>▼</span></div><div class="card-body">';
-            
-            // Evidence section
-            html += '<h4 style="margin: 12px 0 8px; color: var(--text-secondary);">🔍 Evidence</h4>';
-            html += '<ul style="margin-left: 20px; color: var(--text-primary);">';
+            // Evidence - Table Layout
+            html += '<div class="result-card"><div class="card-header"><h3>🔍 Evidence</h3></div><div class="card-body" style="padding: 12px;">';
+            html += '<table style="width: 100%; border-collapse: collapse; font-size: 12px;">';
+            html += '<tr style="border-bottom: 1px solid var(--border);"><th style="text-align: left; padding: 6px; color: var(--text-muted); width: 40%;">Field</th><th style="text-align: left; padding: 6px; color: var(--text-muted);">Value</th></tr>';
             
             if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
-                html += `<li><strong>IP Address:</strong> ${currentResults.abuseipdb.ipAddress}`;
-                if (currentResults.abuseipdb.abuseConfidenceScore > 0) {
-                    html += ` (${currentResults.abuseipdb.abuseConfidenceScore}% abuse confidence)`;
-                }
-                html += '</li>';
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">IP Address</td><td style="padding: 6px; color: var(--text-primary);">' + currentResults.abuseipdb.ipAddress + '</td></tr>';
             }
-            
+            if (currentResults.abuseipdb && currentResults.abuseipdb.countryName) {
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">Country</td><td style="padding: 6px; color: var(--text-primary);">' + currentResults.abuseipdb.countryName + '</td></tr>';
+            }
+            if (currentResults.abuseipdb && currentResults.abuseipdb.isp) {
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">ISP</td><td style="padding: 6px; color: var(--text-primary);">' + currentResults.abuseipdb.isp + '</td></tr>';
+            }
+            if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">Abuse Confidence</td><td style="padding: 6px; color: var(--text-primary);">' + currentResults.abuseipdb.abuseConfidenceScore + '%</td></tr>';
+            }
             if (currentResults.abuseipdb && currentResults.abuseipdb.totalReports > 0) {
-                html += `<li><strong>Total Reports:</strong> ${currentResults.abuseipdb.totalReports} abuse reports from ${currentResults.abuseipdb.numDistinctUsers} distinct users</li>`;
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">Total Reports</td><td style="padding: 6px; color: var(--text-primary);">' + currentResults.abuseipdb.totalReports + ' reports</td></tr>';
             }
-            
             if (currentResults.abuseipdb && currentResults.abuseipdb.categories && currentResults.abuseipdb.categories.length > 0) {
                 const catNames = currentResults.abuseipdb.categories.map(c => getCategoryName(c)).join(', ');
-                html += `<li><strong>Threat Categories:</strong> ${catNames}</li>`;
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">Threat Categories</td><td style="padding: 6px; color: var(--text-primary);">' + catNames + '</td></tr>';
             }
-            
-            if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-                const stats = currentResults.vt.data.attributes.last_analysis_stats;
-                const malicious = stats.malicious + stats.suspicious;
-                if (malicious > 0) {
-                    html += `<li><strong>VirusTotal:</strong> ${malicious} engines flagged as malicious/suspicious out of ${Object.values(stats).reduce((a, b) => a + b, 0)} total</li>`;
-                }
-                
-                if (currentResults.vt.data.attributes.threat_labels && currentResults.vt.data.attributes.threat_labels.length > 0) {
-                    html += `<li><strong>Threat Labels:</strong> ${currentResults.vt.data.attributes.threat_labels.join(', ')}</li>`;
-                }
+            if (currentResults.whois && currentResults.whois.creation_date) {
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">Domain Registered</td><td style="padding: 6px; color: var(--text-primary);">' + new Date(currentResults.whois.creation_date).toLocaleDateString() + '</td></tr>';
             }
+            if (currentResults.whois && currentResults.whois.registrar) {
+                html += '<tr><td style="padding: 6px; color: var(--text-secondary);">Registrar</td><td style="padding: 6px; color: var(--text-primary);">' + currentResults.whois.registrar + '</td></tr>';
+            }
+            html += '</table>';
+            html += '</div></div>';
             
-            html += '</ul>';
-            
-            // Analysis section
-            html += '<h4 style="margin: 16px 0 8px; color: var(--text-secondary);">📝 Analysis</h4>';
-            
-            let analysisText = '';
+            // References with clickable buttons
             if (verdict === 'HIGH RISK - MALICIOUS') {
                 if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore > 75) {
                     analysisText += `The IP address ${currentResults.ioc} has been reported multiple times for malicious activity with a high abuse confidence score of ${currentResults.abuseipdb.abuseConfidenceScore}%. `;
@@ -2574,56 +4665,94 @@
             
             html += '</div></div>';
 
-            // Recommendation
-            html += '<div class="result-card"><div class="card-header" onclick="toggleCard(this)"><h3>💡 Recommendation / Next Steps</h3><span>▼</span></div><div class="card-body">';
-            
+            // Recommendations as alert blocks
+            let recAlertStyle = '';
+            let recBgColor = '';
+            let recIcon = '';
             if (verdict === 'HIGH RISK - MALICIOUS') {
-                html += '<ul style="margin-left: 20px; color: var(--text-primary);">';
+                recAlertStyle = 'background: rgba(248,81,73,0.1); border: 1px solid var(--accent-red); border-left: 4px solid var(--accent-red);';
+                recBgColor = 'var(--accent-red)';
+                recIcon = '🚨';
+            } else if (verdict === 'SUSPICIOUS') {
+                recAlertStyle = 'background: rgba(255,183,77,0.1); border: 1px solid var(--accent-yellow); border-left: 4px solid var(--accent-yellow);';
+                recBgColor = 'var(--accent-yellow)';
+                recIcon = '⚠️';
+            } else if (verdict === 'LOW RISK - CLEAN') {
+                recAlertStyle = 'background: rgba(72,199,103,0.1); border: 1px solid var(--accent-green); border-left: 4px solid var(--accent-green);';
+                recBgColor = 'var(--accent-green)';
+                recIcon = '✅';
+            } else {
+                recAlertStyle = 'background: var(--bg-secondary); border: 1px solid var(--border); border-left: 4px solid var(--text-muted);';
+                recBgColor = 'var(--text-muted)';
+                recIcon = '❓';
+            }
+            
+            html += '<div class="result-card"><div class="card-header"><h3>💡 Recommendations</h3></div><div class="card-body">';
+            html += '<div style="' + recAlertStyle + ' border-radius: 6px; padding: 12px; margin-bottom: 12px;">';
+            html += '<strong style="color: ' + recBgColor + ';">' + recIcon + ' Recommended Actions:</strong></div>';
+            html += '<ul style="margin-left: 20px; color: var(--text-primary);">';
+            if (verdict === 'HIGH RISK - MALICIOUS') {
                 html += '<li>Block the IP address at firewall/IPS level</li>';
+                html += '<li>Quarantine affected systems immediately</li>';
                 html += '<li>Check internal logs for any connections to this IP</li>';
                 html += '<li>Scan affected systems for indicators of compromise</li>';
                 html += '<li>Report to relevant abuse email (ISP/hosting provider)</li>';
                 html += '<li>Consider adding to blocklists</li>';
-                html += '</ul>';
             } else if (verdict === 'SUSPICIOUS') {
-                html += '<ul style="margin-left: 20px; color: var(--text-primary);">';
                 html += '<li>Monitor connections to this IP</li>';
                 html += '<li>Review logs for any recent activity</li>';
                 html += '<li>Consider blocking if activity persists</li>';
                 html += '<li>Further investigate context of connection</li>';
-                html += '</ul>';
             } else if (verdict === 'LOW RISK - CLEAN') {
-                html += '<ul style="margin-left: 20px; color: var(--text-primary);">';
                 html += '<li>No immediate action required</li>';
                 html += '<li>Continue monitoring as normal</li>';
                 html += '<li>Whitelist if false positives occur</li>';
-                html += '</ul>';
             } else {
-                html += '<ul style="margin-left: 20px; color: var(--text-primary);">';
                 html += '<li>Gather more context about the indicator</li>';
                 html += '<li>Check additional threat intelligence sources</li>';
                 html += '<li>Review the circumstances of the indicator</li>';
                 html += '<li>Consult with senior analyst if needed</li>';
-                html += '</ul>';
             }
-            
-            html += '</div></div>';
-
-            // References
-            html += '<div class="result-card"><div class="card-header" onclick="toggleCard(this)"><h3>🔗 References</h3><span>▼</span></div><div class="card-body">';
-            html += '<ul style="margin-left: 20px; color: var(--accent-blue);">';
-            
-            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
-                html += `<li><a href="https://www.abuseipdb.com/check/${currentResults.abuseipdb.ipAddress}" target="_blank" style="color: var(--accent-blue);">AbuseIPDB - Check IP ${currentResults.abuseipdb.ipAddress}</a></li>`;
-            }
-            
-            if (currentResults.ioc) {
-                html += `<li><a href="https://www.virustotal.com/gui/ip-address/${currentResults.ioc}" target="_blank" style="color: var(--accent-blue);">VirusTotal - Check IP ${currentResults.ioc}</a></li>`;
-            }
-            
             html += '</ul>';
             html += '</div></div>';
 
+            // References with clickable buttons
+            html += '<div class="result-card"><div class="card-header"><h3>🔗 External References</h3></div><div class="card-body">';
+            html += '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+            
+            if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
+                html += `<a href="https://www.abuseipdb.com/check/${currentResults.abuseipdb.ipAddress}" target="_blank" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">🚔 AbuseIPDB</a>`;
+            }
+            
+            if (currentResults.ioc) {
+                // Determine VT URL based on IOC type
+                let vtUrl = '';
+                let vtIcon = '🦠';
+                if (currentResults.type === 'ip') {
+                    vtUrl = `https://www.virustotal.com/gui/ip-address/${currentResults.ioc}`;
+                } else if (currentResults.type === 'domain') {
+                    vtUrl = `https://www.virustotal.com/gui/domain/${currentResults.ioc}`;
+                    vtIcon = '🌐';
+                } else if (currentResults.type === 'url') {
+                    vtUrl = `https://www.virustotal.com/gui/url/${btoa(currentResults.ioc).substring(0, 50)}`;
+                    vtIcon = '🔗';
+                } else if (currentResults.type === 'hash') {
+                    vtUrl = `https://www.virustotal.com/gui/file/${currentResults.ioc}`;
+                    vtIcon = '📄';
+                } else {
+                    vtUrl = `https://www.virustotal.com/gui/search/${currentResults.ioc}`;
+                }
+                html += `<a href="${vtUrl}" target="_blank" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">${vtIcon} VirusTotal</a>`;
+            }
+            
+            // Add WHOIS lookup button
+            if (currentResults.whois && currentResults.whois.whois_server) {
+                html += `<a href="https://www.whois.com/whois/${currentResults.ioc}" target="_blank" style="background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; color: var(--text-primary); text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">🌐 WHOIS Lookup</a>`;
+            }
+            
+            html += '</div>';
+            html += '</div></div>';
+            
             container.innerHTML = html;
         }
 
@@ -2646,6 +4775,16 @@
                 
                 const hostnames = a.hostnames ? JSON.stringify(a.hostnames) : '[]';
                 csv += `${a.ipAddress || ''},${a.abuseConfidenceScore || 0},${a.totalReports || 0},${a.isp || ''},${a.domain || ''},${a.countryCode || ''},${hostnames},${a.isPublic ? 'TRUE' : 'FALSE'},${a.isWhitelisted ? 'TRUE' : ''},${a.usageType || ''},${a.ipVersion || 4},${a.numDistinctUsers || 0},${a.lastReportedAt || ''},${a.isTor ? 'TRUE' : 'FALSE'}\n`;
+            }
+            
+            // Add WHOIS data if available
+            if (currentResults.whois && currentResults.whois.domain_name) {
+                csv += '\nWHOIS Info\n';
+                csv += `domain_name,registrar,creation_date,expiration_date,updated_date,dnssec,name_servers,emails\n`;
+                const w = currentResults.whois;
+                const nameServers = w.name_servers ? JSON.stringify(w.name_servers) : '[]';
+                const emails = w.emails ? (Array.isArray(w.emails) ? JSON.stringify(w.emails) : w.emails) : '';
+                csv += `${w.domain_name || ''},${w.registrar || ''},${w.creation_date || ''},${w.expiration_date || ''},${w.updated_date || ''},${w.dnssec || ''},${nameServers},${emails}\n`;
             }
             
             // Add VirusTotal data
@@ -2679,6 +4818,14 @@
                 txt += `  AbuseIPDB Confidence: ${currentResults.abuseipdb.abuseConfidenceScore}%\n`;
                 txt += `  AbuseIPDB Total Reports: ${currentResults.abuseipdb.totalReports || 0}\n`;
             }
+            
+            // WHOIS Summary
+            if (currentResults.whois && currentResults.whois.domain_name) {
+                txt += `  WHOIS Domain: ${currentResults.whois.domain_name}\n`;
+                txt += `  WHOIS Registrar: ${currentResults.whois.registrar || 'N/A'}\n`;
+                txt += `  WHOIS Creation: ${currentResults.whois.creation_date || 'N/A'}\n`;
+                txt += `  WHOIS Expiration: ${currentResults.whois.expiration_date || 'N/A'}\n`;
+            }
             txt += '\n';
 
             // EVIDENCE & ANALYSIS
@@ -2701,6 +4848,24 @@
             if (currentResults.abuseipdb && currentResults.abuseipdb.categories && currentResults.abuseipdb.categories.length > 0) {
                 const catNames = currentResults.abuseipdb.categories.map(c => getCategoryName(c)).join(', ');
                 txt += `  Threat Categories: ${catNames}\n`;
+            }
+            
+            // WHOIS Evidence
+            if (currentResults.whois && currentResults.whois.domain_name) {
+                txt += '\n--- WHOIS Information ---\n';
+                txt += `  Domain: ${currentResults.whois.domain_name}\n`;
+                txt += `  Registrar: ${currentResults.whois.registrar || 'N/A'}\n`;
+                txt += `  Creation Date: ${currentResults.whois.creation_date || 'N/A'}\n`;
+                txt += `  Expiration Date: ${currentResults.whois.expiration_date || 'N/A'}\n`;
+                txt += `  Updated Date: ${currentResults.whois.updated_date || 'N/A'}\n`;
+                txt += `  DNSSEC: ${currentResults.whois.dnssec || 'N/A'}\n`;
+                if (currentResults.whois.name_servers && currentResults.whois.name_servers.length > 0) {
+                    txt += `  Name Servers: ${currentResults.whois.name_servers.join(', ')}\n`;
+                }
+                if (currentResults.whois.emails) {
+                    const emails = Array.isArray(currentResults.whois.emails) ? currentResults.whois.emails : [currentResults.whois.emails];
+                    txt += `  Emails: ${emails.join(', ')}\n`;
+                }
             }
             
             if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
@@ -2784,6 +4949,9 @@
             if (currentResults.abuseipdb && currentResults.abuseipdb.ipAddress) {
                 txt += `  • AbuseIPDB: https://www.abuseipdb.com/check/${currentResults.abuseipdb.ipAddress}\n`;
             }
+            if (currentResults.whois && currentResults.whois.whois_server) {
+                txt += `  • WHOIS Server: ${currentResults.whois.whois_server}\n`;
+            }
             if (currentResults.ioc) {
                 txt += `  • VirusTotal: https://www.virustotal.com/gui/ip-address/${currentResults.ioc}\n`;
             }
@@ -2804,6 +4972,122 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
+        
+        // FAQs Modal
+        function openFAQs() {
+            const faqContent = `
+                <div style="max-height: 70vh; overflow-y: auto; color: var(--text-primary);">
+                    <h2 style="margin-bottom: 20px; color: var(--accent-blue);">📚 Frequently Asked Questions & Limitations</h2>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--accent-yellow); margin-top: 16px;">⚠️ API Rate Limits</h3>
+                        <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                            <li><strong>VirusTotal:</strong> Free tier: 4 requests/minute, 1,000,000 requests/month</li>
+                            <li><strong>AbuseIPDB:</strong> Free tier: 2,000 requests/day</li>
+                            <li><strong>WHOIS (APILayer):</strong> Subscription-based limits</li>
+                            <li><strong>Impact:</strong> Bulk scanning may be slower due to rate limiting</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--accent-red); margin-top: 16px;">🚫 Network & CORS Issues</h3>
+                        <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                            <li><strong>CORS Proxy:</strong> This tool uses corsproxy.io to bypass browser CORS restrictions</li>
+                            <li><strong>Possible Blockage:</strong> Corporate firewalls, VPNs, or ad blockers may block the proxy</li>
+                            <li><strong>Error 400:</strong> Invalid domain format or proxy rate limiting</li>
+                            <li><strong>Error 403:</strong> Access denied - proxy may be temporarily blocked</li>
+                            <li><strong>Error 429:</strong> Too many requests - rate limit exceeded</li>
+                            <li><strong>Solutions:</strong> Try again later, disable ad blocker, or use a different network</li>
+                            <li><strong>Production Use:</strong> For continuous use, host this tool on your own server</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--accent-blue); margin-top: 16px;">💡 How to Use</h3>
+                        <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                            <li><strong>Single IOC Mode:</strong> Enter one IOC for detailed analysis with all sources</li>
+                            <li><strong>Bulk IOCs:</strong> Enter multiple IOCs (one per line, max 100) for batch scanning</li>
+                            <li><strong>Auto-detect:</strong> Leave type as "Auto-detect" to automatically identify IOC type</li>
+                            <li><strong>WHOIS:</strong> Works only with domains, not IP addresses</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--accent-green); margin-top: 16px;">🎯 Use Cases</h3>
+                        <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                            <li><strong>Threat Intelligence:</strong> Investigate IPs/domains found in logs or emails</li>
+                            <li><strong>Incident Response:</strong> Quick lookup during security incidents</li>
+                            <li><strong>Threat Hunting:</strong> Enrich IOCs with multiple intelligence sources</li>
+                            <li><strong>Research:</strong> Analyze threat patterns and actor infrastructure</li>
+                            <li><strong>Due Diligence:</strong> Check reputation of new domains/URLs</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--accent-blue); margin-top: 16px;">🔧 Supported IOC Types</h3>
+                        <ul style="margin-left: 20px; color: var(--text-secondary); line-height: 1.8;">
+                            <li><strong>IP Addresses:</strong> IPv4 (e.g., 8.8.8.8) and IPv6</li>
+                            <li><strong>Domains:</strong> Full domain names (e.g., google.com, example.org)</li>
+                            <li><strong>URLs:</strong> Full URLs with http/https (e.g., https://example.com/malware)</li>
+                            <li><strong>File Hashes:</strong> MD5, SHA1, SHA256</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h3 style="color: var(--text-muted); margin-top: 16px;">📊 Accuracy Disclaimer</h3>
+                        <p style="color: var(--text-secondary); line-height: 1.8;">
+                            Threat intelligence data is dynamically updated and may contain false positives or negatives. 
+                            Always verify findings with additional context before making security decisions. 
+                            This tool is intended to assist analysts, not replace human judgment.
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Update modal content
+            document.querySelector('#settingsModal .modal-header h2').textContent = '⚠️ FAQs & Limitations';
+            document.querySelector('#settingsModal .modal-body').innerHTML = faqContent;
+            document.querySelector('#settingsModal .modal-footer').style.display = 'none';
+            document.getElementById('settingsModal').classList.add('active');
+        }
+        
+        // Close FAQs and restore settings modal
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+            // Restore settings modal after FAQs
+            setTimeout(() => {
+                document.querySelector('#settingsModal .modal-header h2').textContent = 'API Settings';
+                document.querySelector('#settingsModal .modal-body').innerHTML = `
+                    <div class="input-group">
+                        <label>VirusTotal API Key</label>
+                        <input type="password" id="vtApiKey" placeholder="Enter your VirusTotal API key">
+                        <small style="color: var(--text-muted);">Get your key from <a href="https://www.virustotal.com/gui/join-us" target="_blank" style="color: var(--accent-blue);">virustotal.com</a></small>
+                    </div>
+                    <div class="input-group">
+                        <label>AbuseIPDB API Key</label>
+                        <input type="password" id="abuseipdbApiKey" placeholder="Enter your AbuseIPDB API key">
+                        <small style="color: var(--text-muted);">Get your key from <a href="https://www.abuseipdb.com/account/api" target="_blank" style="color: var(--accent-blue);">abuseipdb.com</a></small>
+                    </div>
+                    <div class="input-group">
+                        <label>APILayer WHOIS API Key</label>
+                        <input type="password" id="whoisApiKey" placeholder="Enter your APILayer WHOIS API key">
+                        <small style="color: var(--text-muted);">Get your key from <a href="https://apilayer.com/marketplace/whois-api" target="_blank" style="color: var(--accent-blue);">apilayer.com</a></small>
+                    </div>
+                `;
+                document.querySelector('#settingsModal .modal-footer').style.display = 'flex';
+                loadKeys();
+            }, 300);
+        }
     </script>
+    
+    <!-- Footer -->
+    <footer style="background: var(--bg-secondary); border-top: 1px solid var(--border); padding: 16px; text-align: center; margin-top: auto;">
+        <div style="color: var(--text-muted); font-size: 12px;">
+            <strong style="color: var(--text-secondary);">ThreatScan Investigator</strong> | Threat Intelligence & IOC Analysis
+        </div>
+        <div style="color: var(--text-muted); font-size: 11px; margin-top: 8px;">
+            Built for SOC Analysts & Threat Hunters | <a href="#" onclick="openFAQs(); return false;" style="color: var(--accent-blue); text-decoration: underline;">FAQs & Limitations</a>
+        </div>
+    </footer>
 </body>
 </html>
