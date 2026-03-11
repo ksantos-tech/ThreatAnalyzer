@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel=stylesheet href=css/styles.css>
+    <link rel=stylesheet href=css/modern-theme.css>
 </head>
 <body>
     <!-- Header -->
@@ -22,6 +23,14 @@
             </div>
         </div>
         <div class="header-right">
+            <!-- Theme Toggle -->
+            <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                <div class="theme-toggle-track">
+                    <div class="theme-toggle-thumb">
+                        <span id="themeIcon">☀️</span>
+                    </div>
+                </div>
+            </div>
             <div class="api-status">
                 <span class="status-dot" id="vtStatus"></span>
                 <span>VT</span>

@@ -13,8 +13,104 @@
         let bulkScanProgress = 0;
         let workspaceItems = []; // Workspace items for investigation summary
 
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        
+        // Safe DOM element getter - returns null instead of throwing
+        function $(id) {
+            return document.getElementById(id);
+        }
+        
+        // Safe innerHTML setter with null check
+        function setHTML(id, html) {
+            const el = $(id);
+            if (el) el.innerHTML = html;
+        }
+        
+        // Safe textContent setter
+        function setText(id, text) {
+            const el = $(id);
+            if (el) el.textContent = text;
+        }
+        
+        // Safe style setter
+        function setStyle(id, prop, value) {
+            const el = $(id);
+            if (el && el.style) el.style[prop] = value;
+        }
+        
+        // Safe event listener
+        function onReady(id, callback) {
+            const el = $(id);
+            if (el) {
+                if (document.readyState === 'complete') {
+                    callback(el);
+                } else {
+                    window.addEventListener('load', () => callback(el));
+                }
+            }
+        }
+        
+        // Safe fetch with error handling
+        async function safeFetch(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    console.warn(`API request failed: ${response.status} ${response.statusText}`);
+                    return null;
+                }
+                return await response.json();
+            } catch (e) {
+                console.error('Fetch error:', e.message);
+                return null;
+            }
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const container = $('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;margin-left:auto;">×</button>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+        
+        // Theme Management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('threatanalyzer_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('threatanalyzer_theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
             loadKeys();
             loadRecentScans();
             loadNotes();
@@ -1699,11 +1795,14 @@ Date:
 
         // Main Scan Function
         async function startScan() {
-            const input = document.getElementById('iocInput').value.trim();
+            const inputEl = document.getElementById('iocInput');
+            const input = inputEl ? inputEl.value.trim() : '';
             if (!input) {
-                alert('Please enter an IOC to scan');
+                showToast('Please enter an IOC to scan', 'error');
                 return;
             }
+
+            console.log('Starting scan:', input, 'mode:', scanMode);
 
             if (scanMode === 'bulk') {
                 await startBulkScan(input);
@@ -1714,22 +1813,25 @@ Date:
 
         // Single IOC Scan
         async function startSingleScan(input) {
-            const typeSelect = document.getElementById('iocType').value;
+            const typeEl = document.getElementById('iocType');
+            const typeSelect = typeEl ? typeEl.value : 'auto';
             const ioc = input.trim();
             const type = typeSelect === 'auto' ? detectIOCType(ioc) : typeSelect;
             
             // Show guidance for multiple IOCs in single mode
             if (input.includes('\n') || (input.match(/\n/g) || []).length > 0) {
-                showToast(' Tip: Multiple IOCs detected. Switch to Bulk IOCs mode for better handling!', 'info');
+                showToast('Tip: Multiple IOCs detected. Switch to Bulk IOCs mode for better handling!', 'info');
             }
             
             if (type === 'unknown') {
-                alert('Unable to detect IOC type. Please select a type manually.');
+                showToast('Unable to detect IOC type. Please select a type manually.', 'error');
                 return;
             }
             
             currentResults.ioc = ioc;
             currentResults.type = type;
+
+            console.log('Scanning IOC:', ioc, 'type:', type);
 
             // Save to recent
             saveRecentScan(ioc, type);
@@ -1741,62 +1843,87 @@ Date:
             showLoading('urlscan');
 
             // Update export bar
-            document.getElementById('exportBar').style.display = 'flex';
+            const exportBar = document.getElementById('exportBar');
+            if (exportBar) exportBar.style.display = 'flex';
 
-            // Run scans in parallel
+            // Run scans in parallel with error isolation
             const keys = getKeys();
+            const scanPromises = [];
             
             if (keys.vt) {
-                scanVirusTotal(ioc, type);
+                scanPromises.push(scanVirusTotal(ioc, type));
             } else {
                 showError('vt', 'VirusTotal API key not configured');
             }
 
             if (keys.abuseipdb) {
-                // AbuseIPDB now supports domains/URLs via DNS resolution
-                // It will resolve domain to IP first, then query
-                scanAbuseIPDB(ioc);
-            } else if (keys.abuseipdb) {
-                // AbuseIPDB API only supports IP addresses, not domains/URLs
-                document.getElementById('abuseipdbResults').innerHTML = '<div class="info-message">AbuseIPDB only supports IP addresses, not domains or URLs. Try scanning the IP address directly.</div>';
-                document.getElementById('abuseipdbEmpty').style.display = 'none';
+                scanPromises.push(scanAbuseIPDB(ioc));
             } else {
                 showError('abuseipdb', 'AbuseIPDB API key not configured');
             }
             
             // WHOIS lookup - APILayer WHOIS only works for domains, not IPs
             if (keys.whois && (type === 'domain' || type === 'url')) {
-                scanWhois(ioc);
+                scanPromises.push(scanWhois(ioc));
             } else if (keys.whois && type === 'ip') {
-                document.getElementById('whoisResults').innerHTML = '<div class="info-message">WHOIS lookup is not available for IP addresses (only domains)</div>';
-                document.getElementById('whoisEmpty').style.display = 'none';
+                const whoisResults = document.getElementById('whoisResults');
+                if (whoisResults) {
+                    whoisResults.innerHTML = '<div class="info-message">WHOIS lookup is not available for IP addresses (only domains)</div>';
+                }
+                const whoisEmpty = document.getElementById('whoisEmpty');
+                if (whoisEmpty) whoisEmpty.style.display = 'none';
             } else if (keys.whois) {
-                document.getElementById('whoisResults').innerHTML = '<div class="info-message">WHOIS lookup is not available for this IOC type (only domains)</div>';
-                document.getElementById('whoisEmpty').style.display = 'none';
+                const whoisResults = document.getElementById('whoisResults');
+                if (whoisResults) {
+                    whoisResults.innerHTML = '<div class="info-message">WHOIS lookup is not available for this IOC type (only domains)</div>';
+                }
+                const whoisEmpty = document.getElementById('whoisEmpty');
+                if (whoisEmpty) whoisEmpty.style.display = 'none';
             } else {
                 showError('whois', 'WHOIS API key not configured');
             }
             
             // URLScan lookup - URLScan only works for URLs and domains, not IPs or hashes
             if (keys.urlscan && (type === 'url' || type === 'domain')) {
-                scanURLScan(ioc);
+                scanPromises.push(scanURLScan(ioc));
             } else if (keys.urlscan && (type === 'ip' || type === 'hash')) {
-                document.getElementById('urlscanResults').innerHTML = '<div class="info-message">URLScan only supports URLs and domains, not IP addresses or hashes.</div>';
-                document.getElementById('urlscanEmpty').style.display = 'none';
+                const urlscanResults = document.getElementById('urlscanResults');
+                if (urlscanResults) {
+                    urlscanResults.innerHTML = '<div class="info-message">URLScan only supports URLs and domains, not IP addresses or hashes.</div>';
+                }
+                const urlscanEmpty = document.getElementById('urlscanEmpty');
+                if (urlscanEmpty) urlscanEmpty.style.display = 'none';
             } else if (keys.urlscan) {
-                document.getElementById('urlscanResults').innerHTML = '<div class="info-message">URLScan lookup is not available for this IOC type</div>';
-                document.getElementById('urlscanEmpty').style.display = 'none';
+                const urlscanResults = document.getElementById('urlscanResults');
+                if (urlscanResults) {
+                    urlscanResults.innerHTML = '<div class="info-message">URLScan lookup is not available for this IOC type</div>';
+                }
+                const urlscanEmpty = document.getElementById('urlscanEmpty');
+                if (urlscanEmpty) urlscanEmpty.style.display = 'none';
             } else if (type === 'url' || type === 'domain') {
                 showError('urlscan', 'URLScan API key not configured');
             }
             
-            // Render combined view after both scans complete (with delay for async)
-            setTimeout(() => {
-                const combinedTab = document.getElementById('combinedTab');
-                if (combinedTab && combinedTab.classList.contains('active')) {
-                    renderCombined();
+            // Ensure errors in one API do not block others
+            await Promise.allSettled(scanPromises);
+
+            // Update SOC dashboard widgets if present
+            try {
+                if (typeof updateReputationGrid === 'function') {
+                    updateReputationGrid(currentResults.vt, currentResults.abuseipdb, currentResults.whois, currentResults.urlscan);
                 }
-            }, 1000);
+                if (typeof updateRightSidebar === 'function') {
+                    updateRightSidebar(currentResults.whois, currentResults.abuseipdb);
+                }
+            } catch (e) {
+                console.warn('SOC dashboard update failed:', e);
+            }
+            
+            // Render combined view if active
+            const combinedTab = document.getElementById('combinedTab');
+            if (combinedTab && combinedTab.classList.contains('active')) {
+                renderCombined();
+            }
         }
 
         // Bulk IOC Scan
@@ -3181,6 +3308,7 @@ Date:
 
         function showLoading(target) {
             const container = document.getElementById(target + 'Results');
+            if (!container) return;
             let loadingText = '';
             if (target === 'vt') loadingText = 'Scanning VirusTotal...';
             else if (target === 'abuseipdb') loadingText = 'Scanning AbuseIPDB...';
@@ -3194,13 +3322,22 @@ Date:
                     <span>${loadingText}</span>
                 </div>
             `;
-            document.getElementById(target + 'Empty').style.display = 'none';
+            const emptyEl = document.getElementById(target + 'Empty');
+            if (emptyEl) emptyEl.style.display = 'none';
         }
 
         function showError(target, message) {
+            console.error(`Error in ${target}:`, message);
             const container = document.getElementById(target + 'Results');
-            container.innerHTML = `<div class="error-message">${message}</div>`;
-            document.getElementById(target + 'Empty').style.display = 'none';
+            if (container) {
+                container.innerHTML = `<div class="error-message">${message}</div>`;
+            }
+            const emptyEl = document.getElementById(target + 'Empty');
+            if (emptyEl) {
+                emptyEl.style.display = 'none';
+            }
+            // Also show toast for visibility
+            showToast(message, 'error');
         }
 
         // CORS Proxy (fallback when direct API calls fail)
@@ -3330,6 +3467,8 @@ Date:
                         throw new Error('Unknown IOC type');
                 }
 
+                console.log('VirusTotal request:', endpoint);
+
                 // Try direct API call first (no proxy)
                 let response;
                 try {
@@ -3364,15 +3503,18 @@ Date:
                 }
 
                 const data = await response.json();
+                console.log('VirusTotal response:', data);
                 currentResults.vt = data;
                 renderVirusTotal(data);
                 
                 // Update combined view
-                if (currentResults.abuseipdb) {
+                const combinedContainer = document.getElementById('combinedResults');
+                if (combinedContainer && currentResults.abuseipdb) {
                     renderCombined();
                 }
 
             } catch (error) {
+                console.error('VirusTotal Error:', error);
                 if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                     showError('vt', 'Network error - check connection and try again');
                 } else {
@@ -3383,6 +3525,14 @@ Date:
 
         function renderVirusTotal(data) {
             const container = document.getElementById('vtResults');
+            if (!container || !data || !data.data || !data.data.attributes) {
+                if (container) {
+                    container.innerHTML = '<div class="error-message">VirusTotal data not available.</div>';
+                }
+                const emptyEl = document.getElementById('vtEmpty');
+                if (emptyEl) emptyEl.style.display = 'none';
+                return;
+            }
             const d = data.data.attributes;
             
             // Detection stats
@@ -3660,6 +3810,8 @@ Date:
                 const data = await response.json();
                 const ipData = data.data;
 
+                console.log('AbuseIPDB response:', ipData);
+
                 // Add resolved domain info to the result
                 if (resolvedFromDomain) {
                     ipData.resolvedFrom = resolvedFromDomain;
@@ -3669,11 +3821,13 @@ Date:
                 renderAbuseIPDB(ipData);
                 
                 // Update combined view
-                if (currentResults.vt) {
+                const combinedContainer = document.getElementById('combinedResults');
+                if (combinedContainer && currentResults.vt) {
                     renderCombined();
                 }
 
             } catch (error) {
+                console.error('AbuseIPDB Error:', error);
                 showError('abuseipdb', error.message);
             }
         }
@@ -3740,11 +3894,13 @@ Date:
                 const data = await response.json();
                 
                 if (data.result) {
+                    console.log('WHOIS response:', data.result);
                     currentResults.whois = data.result;
                     renderWhois(data.result);
                     
                     // Update combined view
-                    if (currentResults.vt) {
+                    const combinedContainer = document.getElementById('combinedResults');
+                    if (combinedContainer && currentResults.vt) {
                         renderCombined();
                     }
                 } else {
@@ -3892,6 +4048,7 @@ Date:
                     const uuid = searchResult?._id;
                     
                     // Fetch the full result using the UUID
+                    // If 413 (payload too large), fallback to search result
                     let fullResult = null;
                     if (uuid) {
                         try {
@@ -3906,21 +4063,27 @@ Date:
                             if (resultResponse.ok) {
                                 fullResult = await resultResponse.json();
                             } else if (resultResponse.status === 413) {
-                                console.warn('URLScan full result too large for proxy (413), using search result fallback.');
+                                console.warn('URLScan full result too large (413), using search result fallback.');
+                                fullResult = searchResult; // Use search result directly
                             }
                         } catch (e) {
                             console.error('Error fetching full URLScan result:', e);
-                            // Use search result as fallback
-                            fullResult = searchResult;
+                            fullResult = searchResult; // Fallback to search result
                         }
                     }
                     
                     const mergedResult = fullResult || searchResult;
                     currentResults.urlscan = mergedResult;
-                    renderURLScan(currentResults.urlscan);
                     
-                    // Update combined view
-                    if (currentResults.vt) {
+                    // Safely render with null check
+                    const urlscanContainer = document.getElementById('urlscanResults');
+                    if (urlscanContainer) {
+                        renderURLScan(mergedResult);
+                    }
+                    
+                    // Update combined view safely
+                    const combinedContainer = document.getElementById('combinedResults');
+                    if (combinedContainer && currentResults.vt) {
                         renderCombined();
                     }
                 } else {
@@ -3964,10 +4127,10 @@ Date:
                             }
                             
                             currentResults.urlscan = fullResult || searchResult;
-                            currentResults.urlscan._searchResult = searchResult;
                             renderURLScan(currentResults.urlscan);
                             
-                            if (currentResults.vt) {
+                            const combinedContainer = document.getElementById('combinedResults');
+                            if (combinedContainer && currentResults.vt) {
                                 renderCombined();
                             }
                         } else {
@@ -3987,13 +4150,20 @@ Date:
         function renderURLScan(data) {
             const container = document.getElementById('urlscanResults');
             
+            if (!container) {
+                console.warn('URLScan results container not found');
+                return;
+            }
+            
             if (!data) {
                 container.innerHTML = '<div class="error-message">URLScan data not available.</div>';
-                document.getElementById('urlscanEmpty').style.display = 'none';
+                const emptyEl = document.getElementById('urlscanEmpty');
+                if (emptyEl) emptyEl.style.display = 'none';
                 return;
             }
 
-            document.getElementById('urlscanEmpty').style.display = 'none';
+            const urlscanEmpty = document.getElementById('urlscanEmpty');
+            if (urlscanEmpty) urlscanEmpty.style.display = 'none';
 
             // Extract key data sections
             const page = data.page || {};
@@ -4298,14 +4468,20 @@ Date:
 
         function renderWhois(data) {
             const container = document.getElementById('whoisResults');
+            if (!container) {
+                console.warn('WHOIS results container not found');
+                return;
+            }
             
             if (!data || !data.domain_name) {
                 container.innerHTML = '<div class="error-message">No WHOIS data available</div>';
-                document.getElementById('whoisEmpty').style.display = 'none';
+                const emptyEl = document.getElementById('whoisEmpty');
+                if (emptyEl) emptyEl.style.display = 'none';
                 return;
             }
 
-            document.getElementById('whoisEmpty').style.display = 'none';
+            const emptyEl = document.getElementById('whoisEmpty');
+            if (emptyEl) emptyEl.style.display = 'none';
 
             // Parse dates
             const creationDate = data.creation_date ? new Date(data.creation_date).toLocaleDateString() : 'N/A';
@@ -4458,6 +4634,14 @@ Date:
 
         function renderAbuseIPDB(data) {
             const container = document.getElementById('abuseipdbResults');
+            if (!container || !data) {
+                if (container) {
+                    container.innerHTML = '<div class="error-message">AbuseIPDB data not available.</div>';
+                }
+                const emptyEl = document.getElementById('abuseipdbEmpty');
+                if (emptyEl) emptyEl.style.display = 'none';
+                return;
+            }
             
             // Parse abuse confidence score
             const confidence = data.abuseConfidenceScore || 0;
@@ -4824,6 +5008,11 @@ Date:
 
         // Combined view wrapper (implemented in ui-panels.js)
         function renderCombined() {
+            const combinedContainer = document.getElementById('combinedResults');
+            if (!combinedContainer) {
+                console.warn('Combined results container not found');
+                return;
+            }
             return renderCombinedPanel();
         }
 

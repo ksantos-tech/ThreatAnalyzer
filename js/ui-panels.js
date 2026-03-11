@@ -1,11 +1,17 @@
 // UI Panels Module
-// Contains rendering logic for SOC panels and collapsible card helpers.
+// Modern Analyst Dashboard for SOC Threat Investigation
 
 function renderCombinedPanel() {
     const container = document.getElementById('combinedResults');
 
     if (!currentResults.vt && !currentResults.abuseipdb && !currentResults.whois && !currentResults.urlscan) {
-        container.innerHTML = '<div class="empty-state"><span>Run scans to see combined analysis</span></div>';
+        container.innerHTML = `
+            <div class="empty-state-modern">
+                <div class="empty-icon">🔍</div>
+                <h3>No Analysis Data</h3>
+                <p>Run threat intelligence scans to see combined analysis</p>
+            </div>
+        `;
         return;
     }
 
@@ -25,11 +31,12 @@ function renderCombinedPanel() {
 
     let urlscanMalicious = false;
     let urlscanSuspicious = false;
+    let urlscanScore = 0;
     if (currentResults.urlscan && currentResults.urlscan.verdicts && currentResults.urlscan.verdicts.overall) {
         const overall = currentResults.urlscan.verdicts.overall;
         urlscanMalicious = overall.malicious || false;
-        const score = overall.score || 0;
-        urlscanSuspicious = score > 0 && score <= 50 && !urlscanMalicious;
+        urlscanScore = overall.score || 0;
+        urlscanSuspicious = urlscanScore > 0 && urlscanScore <= 50 && !urlscanMalicious;
     }
 
     let domainAge = null;
@@ -43,232 +50,509 @@ function renderCombinedPanel() {
     let verdictCategory = '';
     let verdictClass = '';
     
-    // Priority 1: URLScan verdict = Malicious → MALICIOUS
     if (urlscanMalicious) {
         verdictCategory = 'MALICIOUS';
         verdictClass = 'high';
-    }
-    // Priority 2: VirusTotal detections > 5 → MALICIOUS
-    else if (vtMalicious > 5) {
+    } else if (vtMalicious > 5) {
         verdictCategory = 'MALICIOUS';
         verdictClass = 'high';
-    }
-    // Priority 3: AbuseIPDB confidence > 75 → MALICIOUS
-    else if (abuseConfidence > 75) {
+    } else if (abuseConfidence > 75) {
         verdictCategory = 'MALICIOUS';
         verdictClass = 'high';
-    }
-    // Priority 4: VirusTotal detections 3-5 → SUSPICIOUS
-    else if (vtMalicious >= 3 && vtMalicious <= 5) {
+    } else if (vtMalicious >= 3 && vtMalicious <= 5) {
         verdictCategory = 'SUSPICIOUS';
         verdictClass = 'suspicious';
-    }
-    // Priority 5: URLScan verdict = Suspicious → SUSPICIOUS
-    else if (urlscanSuspicious) {
+    } else if (urlscanSuspicious) {
         verdictCategory = 'SUSPICIOUS';
         verdictClass = 'suspicious';
-    }
-    // Priority 6: Domain age < 180 days → SUSPICIOUS
-    else if (domainAge !== null && domainAge < 180) {
+    } else if (domainAge !== null && domainAge < 180) {
         verdictCategory = 'SUSPICIOUS';
         verdictClass = 'suspicious';
-    }
-    // Priority 7: Otherwise → NEUTRAL
-    else {
+    } else {
         verdictCategory = 'NEUTRAL';
         verdictClass = 'low';
     }
 
     // Analyst Recommendation
     let recommendation = '';
-    let recommendationClass = '';
     if (verdictCategory === 'MALICIOUS') {
         recommendation = 'BLOCK AND INVESTIGATE';
-        recommendationClass = 'block';
     } else if (verdictCategory === 'SUSPICIOUS') {
         recommendation = 'REVIEW';
-        recommendationClass = 'review';
     } else {
         recommendation = 'MONITOR';
-        recommendationClass = 'allow';
     }
 
-    // Collect Positive Signals based on new rules
+    // Collect signals
     const positiveSignals = [];
+    const riskSignals = [];
+
     if (currentResults.whois && currentResults.whois.creation_date) {
         if (domainAge !== null && domainAge > 365) {
-            positiveSignals.push('Established domain (>365 days)');
+            positiveSignals.push({ icon: '✓', text: 'Established domain (>365 days)', color: 'green' });
+        } else if (domainAge !== null && domainAge < 180) {
+            riskSignal = { icon: '⚠', text: 'Newly registered domain (<180 days)', color: 'yellow' };
+            riskSignals.push(riskSignal);
         }
     }
     if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
         const stats = currentResults.vt.data.attributes.last_analysis_stats;
         if (!stats.malicious && !stats.suspicious) {
-            positiveSignals.push('No VirusTotal malicious detections');
+            positiveSignals.push({ icon: '✓', text: 'No VirusTotal malicious detections', color: 'green' });
         }
-    }
-    if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
-        if (currentResults.abuseipdb.abuseConfidenceScore === 0) {
-            positiveSignals.push('No abuse reports (AbuseIPDB)');
-        }
-    }
-    if (currentResults.urlscan && currentResults.urlscan.verdicts && currentResults.urlscan.verdicts.overall) {
-        if (!currentResults.urlscan.verdicts.overall.malicious && (currentResults.urlscan.verdicts.overall.score || 0) === 0) {
-            positiveSignals.push('No URLScan malicious verdict');
-        }
-    }
-
-    // Collect Risk Signals based on new rules
-    const riskSignals = [];
-    if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-        const stats = currentResults.vt.data.attributes.last_analysis_stats;
         if (stats.malicious > 0) {
-            riskSignals.push('Malware detections from VirusTotal');
+            riskSignals.push({ icon: '✗', text: `Malware detected (${stats.malicious} engines)`, color: 'red' });
         }
         if (stats.suspicious > 0) {
-            riskSignals.push('Suspicious detections from VirusTotal');
+            riskSignals.push({ icon: '⚠', text: `Suspicious detections (${stats.suspicious} engines)`, color: 'yellow' });
         }
     }
     if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
-        if (currentResults.abuseipdb.abuseConfidenceScore > 75) {
-            riskSignals.push('High AbuseIPDB confidence');
-        } else if (currentResults.abuseipdb.abuseConfidenceScore > 0) {
-            riskSignals.push('Moderate AbuseIPDB confidence');
-        }
-    }
-    if (currentResults.whois && currentResults.whois.creation_date) {
-        if (domainAge !== null && domainAge < 180) {
-            riskSignals.push('Newly registered domain (<180 days)');
+        if (abuseConfidence === 0) {
+            positiveSignals.push({ icon: '✓', text: 'No abuse reports (AbuseIPDB)', color: 'green' });
+        } else if (abuseConfidence > 75) {
+            riskSignals.push({ icon: '✗', text: `High abuse confidence (${abuseConfidence}%)`, color: 'red' });
+        } else if (abuseConfidence > 0) {
+            riskSignals.push({ icon: '⚠', text: `Moderate abuse confidence (${abuseConfidence}%)`, color: 'yellow' });
         }
     }
     if (currentResults.urlscan && currentResults.urlscan.verdicts && currentResults.urlscan.verdicts.overall) {
-        if (currentResults.urlscan.verdicts.overall.malicious) {
-            riskSignals.push('URLScan flagged as malicious');
+        if (!urlscanMalicious && urlscanScore === 0) {
+            positiveSignals.push({ icon: '✓', text: 'URLScan: No threats detected', color: 'green' });
+        }
+        if (urlscanMalicious) {
+            riskSignals.push({ icon: '✗', text: 'URLScan: Malicious verdict', color: 'red' });
         }
     }
 
-    const typeIcon = currentResults.type === 'ip' ? '🖥' : currentResults.type === 'domain' ? '📧' : currentResults.type === 'url' ? '🌐' : currentResults.type === 'hash' ? '📄' : '🔍';
-    let html = '';
+    // Determine colors based on verdict
+    const verdictColors = {
+        high: { bg: 'rgba(248, 81, 73, 0.15)', border: '#f85149', text: '#f85149', gradient: 'linear-gradient(135deg, #f85149 0%, #da3633 100%)' },
+        suspicious: { bg: 'rgba(210, 153, 34, 0.15)', border: '#d29922', text: '#d29922', gradient: 'linear-gradient(135deg, #d29922 0%, #bb8009 100%)' },
+        low: { bg: 'rgba(63, 185, 80, 0.15)', border: '#3fb950', text: '#3fb950', gradient: 'linear-gradient(135deg, #3fb950 0%, #238636 100%)' }
+    };
+    const colors = verdictColors[verdictClass];
 
-    html += '<div class="quick-actions-bar">';
-    html += '<button onclick="copyIOC()" class="quick-action-btn">📋 Copy IOC</button>';
-    html += '<button onclick="copyCombinedResults()" class="quick-action-btn">📄 Copy Report</button>';
-    html += '<button onclick="exportTXT()" class="quick-action-btn">💾 Export</button>';
-    html += '</div>';
+    const typeIcon = currentResults.type === 'ip' ? '🖥' : currentResults.type === 'domain' ? '🌐' : currentResults.type === 'url' ? '🔗' : currentResults.type === 'hash' ? '📄' : '🔍';
 
-    html += '<div class="ioc-header-bar">';
-    html += '<div class="ioc-header-main">';
-    html += '<span class="ioc-icon">' + typeIcon + '</span>';
-    html += '<span class="ioc-value">' + currentResults.ioc + '</span>';
-    html += '<span class="ioc-type-badge">' + (currentResults.type || 'N/A').toUpperCase() + '</span>';
-    html += '</div>';
-    html += '<div class="sources-indicator">';
-    let sources = [];
-    if (currentResults.vt) sources.push('VirusTotal');
-    if (currentResults.abuseipdb) sources.push('AbuseIPDB');
-    if (currentResults.whois) sources.push('WHOIS');
-    if (currentResults.urlscan) sources.push('URLScan');
-    html += '📡 Sources: ' + (sources.length > 0 ? sources.join(' | ') : 'None');
-    html += '</div>';
-    html += '</div>';
+    let html = `
+        <style>
+            .dashboard-container {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                animation: fadeIn 0.4s ease-out;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .dashboard-header {
+                background: linear-gradient(135deg, #161b22 0%, #1c2128 100%);
+                border: 1px solid #30363d;
+                border-radius: 16px;
+                padding: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .ioc-info {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+            .ioc-badge {
+                background: ${colors.bg};
+                border: 1px solid ${colors.border};
+                border-radius: 12px;
+                padding: 12px 20px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .ioc-icon {
+                font-size: 24px;
+            }
+            .ioc-details {
+                display: flex;
+                flex-direction: column;
+            }
+            .ioc-value {
+                font-size: 18px;
+                font-weight: 600;
+                color: #e6edf3;
+                font-family: 'JetBrains Mono', monospace;
+            }
+            .ioc-type {
+                font-size: 12px;
+                color: #8b949e;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .verdict-badge {
+                background: ${colors.gradient};
+                border-radius: 12px;
+                padding: 16px 32px;
+                text-align: center;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 40px ${colors.bg};
+            }
+            .verdict-label {
+                font-size: 11px;
+                color: rgba(255,255,255,0.7);
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                margin-bottom: 4px;
+            }
+            .verdict-text {
+                font-size: 22px;
+                font-weight: 700;
+                color: white;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .quick-actions {
+                display: flex;
+                gap: 8px;
+            }
+            .quick-btn {
+                background: #21262d;
+                border: 1px solid #30363d;
+                border-radius: 8px;
+                padding: 10px 16px;
+                color: #8b949e;
+                cursor: pointer;
+                font-size: 13px;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .quick-btn:hover {
+                background: #30363d;
+                color: #e6edf3;
+                border-color: #58a6ff;
+            }
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: 16px;
+            }
+            .dashboard-card {
+                background: linear-gradient(180deg, #161b22 0%, #12171e 100%);
+                border: 1px solid #30363d;
+                border-radius: 16px;
+                overflow: hidden;
+                transition: all 0.3s ease;
+            }
+            .dashboard-card:hover {
+                border-color: #58a6ff;
+                box-shadow: 0 8px 32px rgba(88, 166, 255, 0.1);
+                transform: translateY(-2px);
+            }
+            .card-header {
+                background: linear-gradient(90deg, #1c2128 0%, #161b22 100%);
+                padding: 16px 20px;
+                border-bottom: 1px solid #21262d;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .card-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #e6edf3;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .card-title-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+            }
+            .card-body {
+                padding: 20px;
+            }
+            .signal-list {
+                list-style: none;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+            .signal-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 12px;
+                border-radius: 10px;
+                background: #21262d;
+                transition: all 0.2s ease;
+            }
+            .signal-item:hover {
+                background: #2d333b;
+            }
+            .signal-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+            .signal-icon.green { background: rgba(63, 185, 80, 0.2); }
+            .signal-icon.yellow { background: rgba(210, 153, 34, 0.2); }
+            .signal-icon.red { background: rgba(248, 81, 73, 0.2); }
+            .signal-text {
+                color: #e6edf3;
+                font-size: 13px;
+                line-height: 1.5;
+            }
+            .no-signals {
+                color: #6e7681;
+                font-size: 13px;
+                text-align: center;
+                padding: 20px;
+            }
+            .evidence-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+            .evidence-item {
+                background: #21262d;
+                border-radius: 10px;
+                padding: 16px;
+                text-align: center;
+            }
+            .evidence-source {
+                font-size: 11px;
+                color: #8b949e;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 8px;
+            }
+            .evidence-value {
+                font-size: 18px;
+                font-weight: 600;
+                color: #e6edf3;
+                margin-bottom: 4px;
+            }
+            .evidence-detail {
+                font-size: 11px;
+            }
+            .evidence-detail.green { color: #3fb950; }
+            .evidence-detail.yellow { color: #d29922; }
+            .evidence-detail.red { color: #f85149; }
+            .evidence-detail.gray { color: #6e7681; }
+            .recommendation-box {
+                background: ${colors.gradient};
+                border-radius: 16px;
+                padding: 28px;
+                text-align: center;
+            }
+            .recommendation-icon {
+                font-size: 40px;
+                margin-bottom: 12px;
+            }
+            .recommendation-text {
+                font-size: 20px;
+                font-weight: 700;
+                color: white;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            }
+            .recommendation-hint {
+                font-size: 12px;
+                color: rgba(255,255,255,0.7);
+                margin-top: 8px;
+            }
+            .sources-bar {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .source-tag {
+                background: #21262d;
+                border: 1px solid #30363d;
+                border-radius: 6px;
+                padding: 4px 10px;
+                font-size: 11px;
+                color: #8b949e;
+            }
+            .source-tag.active {
+                background: rgba(88, 166, 255, 0.15);
+                border-color: #58a6ff;
+                color: #58a6ff;
+            }
+            .empty-state-modern {
+                text-align: center;
+                padding: 60px 20px;
+                color: #8b949e;
+            }
+            .empty-icon {
+                font-size: 48px;
+                margin-bottom: 16px;
+                opacity: 0.5;
+            }
+            .empty-state-modern h3 {
+                font-size: 18px;
+                color: #e6edf3;
+                margin-bottom: 8px;
+            }
+        </style>
+        
+        <div class="dashboard-container">
+            <!-- Header Section -->
+            <div class="dashboard-header">
+                <div class="ioc-info">
+                    <div class="ioc-badge">
+                        <span class="ioc-icon">${typeIcon}</span>
+                        <div class="ioc-details">
+                            <span class="ioc-value">${currentResults.ioc}</span>
+                            <span class="ioc-type">${(currentResults.type || 'unknown').toUpperCase()}</span>
+                        </div>
+                    </div>
+                    <div class="sources-bar">
+                        ${currentResults.vt ? '<span class="source-tag active">VirusTotal</span>' : '<span class="source-tag">VirusTotal</span>'}
+                        ${currentResults.abuseipdb ? '<span class="source-tag active">AbuseIPDB</span>' : '<span class="source-tag">AbuseIPDB</span>'}
+                        ${currentResults.whois ? '<span class="source-tag active">WHOIS</span>' : '<span class="source-tag">WHOIS</span>'}
+                        ${currentResults.urlscan ? '<span class="source-tag active">URLScan</span>' : '<span class="source-tag">URLScan</span>'}
+                    </div>
+                </div>
+                <div class="verdict-badge">
+                    <div class="verdict-label">Final Verdict</div>
+                    <div class="verdict-text">${verdictCategory}</div>
+                </div>
+            </div>
 
-    // Final Verdict Banner
-    const verdictColor = verdictClass === 'high' ? 'var(--accent-red)' : verdictClass === 'suspicious' ? 'var(--accent-yellow)' : 'var(--accent-green)';
-    html += '<div class="soc-card" style="border-left: 4px solid ' + verdictColor + ';">';
-    html += '<div class="soc-card-header expanded">';
-    html += '<h3 style="color: ' + verdictColor + ';">⚖️ Final Verdict: ' + verdictCategory + '</h3>';
-    html += '</div>';
-    html += '</div>';
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="copyIOC()">📋 Copy IOC</button>
+                <button class="quick-btn" onclick="copyCombinedResults()">📄 Copy Report</button>
+                <button class="quick-btn" onclick="exportTXT()">💾 Export</button>
+            </div>
 
-    // Positive Signals Section
-    html += '<div class="soc-card"><div id="positive-signals-header" class="soc-card-header expanded" onclick="toggleSocCardPanel(\'positive-signals\')"><h3>✅ Positive Signals</h3><span id="positive-signals-toggle" class="soc-card-toggle">▼</span></div>';
-    html += '<div id="positive-signals-body" class="soc-card-body">';
-    if (positiveSignals.length > 0) {
-        html += '<ul style="margin: 0; padding-left: 20px; color: var(--accent-green);">';
-        positiveSignals.forEach(signal => {
-            html += '<li style="margin-bottom: 8px;">' + signal + '</li>';
-        });
-        html += '</ul>';
-    } else {
-        html += '<span style="color: var(--text-muted);">No positive signals detected</span>';
-    }
-    html += '</div></div>';
+            <!-- Main Grid -->
+            <div class="dashboard-grid">
+                <!-- Risk Signals Card -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-title-icon" style="background: rgba(248, 81, 73, 0.2);">⚠️</div>
+                            Risk Signals
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        ${riskSignals.length > 0 ? `
+                            <ul class="signal-list">
+                                ${riskSignals.map(s => `
+                                    <li class="signal-item">
+                                        <div class="signal-icon ${s.color}">${s.icon}</div>
+                                        <span class="signal-text">${s.text}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        ` : '<div class="no-signals">No risk signals detected</div>'}
+                    </div>
+                </div>
 
-    // Risk Signals Section
-    html += '<div class="soc-card"><div id="risk-signals-header" class="soc-card-header expanded" onclick="toggleSocCardPanel(\'risk-signals\')"><h3>⚠️ Risk Signals</h3><span id="risk-signals-toggle" class="soc-card-toggle">▼</span></div>';
-    html += '<div id="risk-signals-body" class="soc-card-body">';
-    if (riskSignals.length > 0) {
-        html += '<ul style="margin: 0; padding-left: 20px; color: var(--accent-red);">';
-        riskSignals.forEach(signal => {
-            html += '<li style="margin-bottom: 8px;">' + signal + '</li>';
-        });
-        html += '</ul>';
-    } else {
-        html += '<span style="color: var(--text-muted);">No risk signals detected</span>';
-    }
-    html += '</div></div>';
+                <!-- Positive Signals Card -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-title-icon" style="background: rgba(63, 185, 80, 0.2);">✅</div>
+                            Positive Signals
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        ${positiveSignals.length > 0 ? `
+                            <ul class="signal-list">
+                                ${positiveSignals.map(s => `
+                                    <li class="signal-item">
+                                        <div class="signal-icon ${s.color}">${s.icon}</div>
+                                        <span class="signal-text">${s.text}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        ` : '<div class="no-signals">No positive signals detected</div>'}
+                    </div>
+                </div>
 
-    // Evidence Weighting Section
-    html += '<div class="soc-card"><div id="evidence-header" class="soc-card-header expanded" onclick="toggleSocCardPanel(\'evidence\')"><h3>📊 Evidence Weighting</h3><span id="evidence-toggle" class="soc-card-toggle">▼</span></div>';
-    html += '<div id="evidence-body" class="soc-card-body">';
+                <!-- Evidence Weighting Card -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-title-icon" style="background: rgba(88, 166, 255, 0.2);">📊</div>
+                            Evidence Weighting
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="evidence-grid">
+                            <!-- VirusTotal -->
+                            <div class="evidence-item">
+                                <div class="evidence-source">VirusTotal</div>
+                                ${currentResults.vt ? (() => {
+                                    const stats = currentResults.vt.data.attributes.last_analysis_stats;
+                                    const total = Object.values(stats).reduce((a, b) => a + b, 0);
+                                    const conf = vtMalicious > 5 ? 'red' : vtMalicious > 0 ? 'yellow' : 'green';
+                                    return `<div class="evidence-value">${vtMalicious}/${total}</div><div class="evidence-detail ${conf}">${vtMalicious > 5 ? 'HIGH RISK' : vtMalicious > 0 ? 'MEDIUM' : 'CLEAN'}</div>`;
+                                })() : '<div class="evidence-value">-</div><div class="evidence-detail gray">No data</div>'}
+                            </div>
+                            <!-- AbuseIPDB -->
+                            <div class="evidence-item">
+                                <div class="evidence-source">AbuseIPDB</div>
+                                ${currentResults.abuseipdb ? (() => {
+                                    const conf = abuseConfidence > 75 ? 'red' : abuseConfidence > 0 ? 'yellow' : 'green';
+                                    return `<div class="evidence-value">${abuseConfidence}%</div><div class="evidence-detail ${conf}">${abuseConfidence > 75 ? 'HIGH' : abuseConfidence > 0 ? 'MEDIUM' : 'CLEAN'}</div>`;
+                                })() : '<div class="evidence-value">-</div><div class="evidence-detail gray">No data</div>'}
+                            </div>
+                            <!-- URLScan -->
+                            <div class="evidence-item">
+                                <div class="evidence-source">URLScan</div>
+                                ${currentResults.urlscan ? (() => {
+                                    const conf = urlscanMalicious ? 'red' : urlscanScore > 0 ? 'yellow' : 'green';
+                                    const status = urlscanMalicious ? 'MALICIOUS' : urlscanScore > 0 ? 'SUSPICIOUS' : 'CLEAN';
+                                    return `<div class="evidence-value">${urlscanScore}</div><div class="evidence-detail ${conf}">${status}</div>`;
+                                })() : '<div class="evidence-value">-</div><div class="evidence-detail gray">No data</div>'}
+                            </div>
+                            <!-- WHOIS -->
+                            <div class="evidence-item">
+                                <div class="evidence-source">WHOIS</div>
+                                ${currentResults.whois ? (() => {
+                                    const conf = domainAge < 180 ? 'yellow' : domainAge < 365 ? 'yellow' : 'green';
+                                    const status = domainAge < 180 ? 'SUSPICIOUS' : domainAge < 365 ? 'NEUTRAL' : 'CLEAN';
+                                    return `<div class="evidence-value">${domainAge}d</div><div class="evidence-detail ${conf}">${status}</div>`;
+                                })() : '<div class="evidence-value">-</div><div class="evidence-detail gray">No data</div>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    // VirusTotal
-    html += '<div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">';
-    html += '<div style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">VirusTotal</div>';
-    if (currentResults.vt && currentResults.vt.data && currentResults.vt.data.attributes) {
-        const stats = currentResults.vt.data.attributes.last_analysis_stats;
-        const total = Object.values(stats).reduce((a, b) => a + b, 0);
-        html += '<div style="color: var(--text-secondary); font-size: 13px;">Detections: ' + vtMalicious + ' / ' + total + '</div>';
-        html += '<div style="color: var(--text-muted); font-size: 12px;">Confidence: ' + (vtMalicious > 5 ? 'HIGH' : vtMalicious > 0 ? 'MEDIUM' : 'LOW') + '</div>';
-    } else {
-        html += '<div style="color: var(--text-muted); font-size: 13px;">No data available</div>';
-    }
-    html += '</div>';
-
-    // AbuseIPDB
-    html += '<div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">';
-    html += '<div style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">AbuseIPDB</div>';
-    if (currentResults.abuseipdb && currentResults.abuseipdb.abuseConfidenceScore !== undefined) {
-        html += '<div style="color: var(--text-secondary); font-size: 13px;">' + (abuseConfidence > 0 ? 'Abuse reports found' : 'No abuse reports') + '</div>';
-        html += '<div style="color: var(--text-muted); font-size: 12px;">Confidence: ' + (abuseConfidence > 75 ? 'HIGH' : abuseConfidence > 0 ? 'MEDIUM' : 'LOW') + '</div>';
-    } else {
-        html += '<div style="color: var(--text-muted); font-size: 13px;">No data available</div>';
-    }
-    html += '</div>';
-
-    // URLScan
-    html += '<div style="margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">';
-    html += '<div style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">URLScan</div>';
-    if (currentResults.urlscan && currentResults.urlscan.verdicts && currentResults.urlscan.verdicts.overall) {
-        const overall = currentResults.urlscan.verdicts.overall;
-        html += '<div style="color: var(--text-secondary); font-size: 13px;">' + (overall.malicious ? 'Malicious verdict' : 'No malicious verdict') + '</div>';
-        html += '<div style="color: var(--text-muted); font-size: 12px;">Verdict: ' + (overall.malicious ? 'MALICIOUS' : (overall.score > 0 ? 'SUSPICIOUS' : 'CLEAN')) + '</div>';
-    } else {
-        html += '<div style="color: var(--text-muted); font-size: 13px;">No data available</div>';
-    }
-    html += '</div>';
-
-    // WHOIS
-    html += '<div>';
-    html += '<div style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">WHOIS</div>';
-    if (currentResults.whois && currentResults.whois.creation_date) {
-        html += '<div style="color: var(--text-secondary); font-size: 13px;">Domain Age: ' + domainAge + ' days</div>';
-        let ageSignal = 'CLEAN';
-        if (domainAge < 180) ageSignal = 'SUSPICIOUS';
-        else if (domainAge < 365) ageSignal = 'NEUTRAL';
-        html += '<div style="color: var(--text-muted); font-size: 12px;">Classification: ' + ageSignal + '</div>';
-    } else {
-        html += '<div style="color: var(--text-muted); font-size: 13px;">No data available</div>';
-    }
-    html += '</div>';
-
-    html += '</div></div>';
-
-    // Analyst Recommendation Section
-    html += '<div class="soc-card"><div id="recommendation-header" class="soc-card-header expanded" onclick="toggleSocCardPanel(\'recommendation\')"><h3>💡 Analyst Recommendation</h3><span id="recommendation-toggle" class="soc-card-toggle">▼</span></div>';
-    html += '<div id="recommendation-body" class="soc-card-body"><div class="recommendation-box ' + recommendationClass + '">';
-    html += '<div class="recommendation-action" style="font-size: 16px; font-weight: 600;">' + recommendation + '</div>';
-    html += '<div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">Investigation guidance - adapt based on context</div>';
-    html += '</div></div></div>';
+                <!-- Analyst Recommendation Card -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-title-icon" style="background: rgba(163, 113, 247, 0.2);">💡</div>
+                            Analyst Recommendation
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="recommendation-box">
+                            <div class="recommendation-icon">${verdictCategory === 'MALICIOUS' ? '🚫' : verdictCategory === 'SUSPICIOUS' ? '👁️' : '✓'}</div>
+                            <div class="recommendation-text">${recommendation}</div>
+                            <div class="recommendation-hint">Investigation guidance - adapt based on context</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
 
     container.innerHTML = html;
 }
