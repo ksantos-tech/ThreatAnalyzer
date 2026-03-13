@@ -186,19 +186,44 @@ export default {
             
             // If scan was submitted, get the result
             if (scanResult.uuid) {
-              // Wait for the scan to complete
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              // Wait for the scan to complete (poll with retries)
+              const maxRetries = 5;
+              const retryDelay = 2000; // 2 seconds between retries
+              let scanComplete = false;
+              let finalResult = null;
               
-              const resultResponse = await fetch(
-                `https://urlscan.io/api/v1/result/${scanResult.uuid}/`,
-                {
-                  headers: {
-                    "API-Key": urlscanKey,
-                    "Accept": "application/json"
+              for (let i = 0; i < maxRetries; i++) {
+                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                
+                const resultResponse = await fetch(
+                  `https://urlscan.io/api/v1/result/${scanResult.uuid}/`,
+                  {
+                    headers: {
+                      "API-Key": urlscanKey,
+                      "Accept": "application/json"
+                    }
                   }
+                );
+                
+                const resultData = await resultResponse.json();
+                
+                // Check if scan is complete (not 404/pending)
+                if (resultResponse.ok && !resultData.message?.includes("not finished")) {
+                  scanComplete = true;
+                  finalResult = resultData;
+                  break;
                 }
-              );
-              results.urlscan = await resultResponse.json();
+              }
+              
+              if (scanComplete && finalResult) {
+                results.urlscan = finalResult;
+              } else {
+                // Return submission result with scan UUID for manual checking
+                results.urlscan = {
+                  ...scanResult,
+                  message: "Scan submitted. Result will be available at: https://urlscan.io/result/" + scanResult.uuid
+                };
+              }
             } else {
               results.urlscan = scanResult;
             }
