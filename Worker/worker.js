@@ -36,6 +36,39 @@ export default {
     try {
       let results = {};
 
+      // Resolve domain to IP for services that only support IPs
+      let resolvedIp = null;
+      let domainToResolve = null;
+      
+      // Extract domain from URL if needed
+      if (type === "url") {
+        try {
+          domainToResolve = new URL(value).hostname;
+        } catch (e) {
+          // Invalid URL, ignore
+        }
+      } else if (type === "domain") {
+        domainToResolve = value;
+      }
+      
+      // Perform DNS resolution for domains and URLs
+      if ((type === "domain" || type === "url") && domainToResolve && abuseipdbKey) {
+        try {
+          // Use DNS over HTTPS to resolve domain to IP
+          const dnsResponse = await fetch(`https://dns.google/resolve?name=${domainToResolve}&type=A`);
+          const dnsData = await dnsResponse.json();
+          if (dnsData.Answer && dnsData.Answer.length > 0) {
+            // Find first A record (IPv4)
+            const aRecord = dnsData.Answer.find(r => r.type === 1);
+            if (aRecord) {
+              resolvedIp = aRecord.data;
+            }
+          }
+        } catch (err) {
+          // DNS resolution failed, continue without AbuseIPDB
+        }
+      }
+
       // VIRUSTOTAL - supports IP, domain, URL
       if (type === "ip" || type === "domain" || type === "url") {
         let vtEndpoint = "";
@@ -66,12 +99,14 @@ export default {
         }
       }
 
-      // ABUSEIPDB - only supports IP addresses
-      if (type === "ip") {
+      // ABUSEIPDB - supports IP addresses (and domains/URLs via DNS resolution)
+      if (type === "ip" || (type === "domain" && resolvedIp) || (type === "url" && resolvedIp)) {
+        const ipToCheck = type === "ip" ? value : resolvedIp;
+        
         if (abuseipdbKey) {
           try {
             const abuse = await fetch(
-              `https://api.abuseipdb.com/api/v2/check?ipAddress=${value}&maxAgeInDays=90`,
+              `https://api.abuseipdb.com/api/v2/check?ipAddress=${ipToCheck}&maxAgeInDays=90`,
               {
                 headers: {
                   Key: abuseipdbKey,
@@ -79,7 +114,13 @@ export default {
                 }
               }
             );
-            results.abuseipdb = await abuse.json();
+            const abuseData = await abuse.json();
+            // Add resolved domain info if we resolved an IP
+            if ((type === "domain" || type === "url") && resolvedIp) {
+              abuseData.resolvedFrom = type === "url" ? new URL(value).hostname : value;
+              abuseData.resolvedIp = resolvedIp;
+            }
+            results.abuseipdb = abuseData;
           } catch (err) {
             results.abuseipdb = { error: err.message };
           }
@@ -88,12 +129,14 @@ export default {
         }
       }
 
-      // WHOIS - only supports domains
-      if (type === "domain") {
-        if (whoisApiKey) {
+      // WHOIS - supports domains and URLs (by extracting domain)
+      if (type === "domain" || type === "url") {
+        const domainForWhois = type === "url" ? domainToResolve : value;
+        
+        if (whoisApiKey && domainForWhois) {
           try {
             const whois = await fetch(
-              `https://api.apilayer.com/whois/query?domain=${value}`,
+              `https://api.apilayer.com/whois/query?domain=${domainForWhois}`,
               {
                 headers: {
                   apikey: whoisApiKey
@@ -104,6 +147,8 @@ export default {
           } catch (err) {
             results.whois = { error: err.message };
           }
+        } else if (!domainForWhois) {
+          results.whois = { error: "Could not extract domain from URL" };
         } else {
           results.whois = { error: "WHOIS_API_KEY not configured" };
         }
