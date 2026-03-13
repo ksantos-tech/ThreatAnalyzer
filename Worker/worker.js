@@ -54,49 +54,48 @@ export default {
         domainToResolve = value;
       }
       
-      // Perform DNS resolution for domains and URLs
-      if ((type === "domain" || type === "url") && domainToResolve && abuseipdbKey) {
+      // Perform DNS resolution for domains and URLs (quick - needed for AbuseIPDB)
+      if ((type === "domain" || type === "url") && domainToResolve) {
         try {
-          // Use DNS over HTTPS to resolve domain to IP
           const dnsResponse = await fetch(`https://dns.google/resolve?name=${domainToResolve}&type=A`);
           const dnsData = await dnsResponse.json();
           if (dnsData.Answer && dnsData.Answer.length > 0) {
-            // Find first A record (IPv4)
             const aRecord = dnsData.Answer.find(r => r.type === 1);
             if (aRecord) {
               resolvedIp = aRecord.data;
             }
           }
         } catch (err) {
-          // DNS resolution failed, continue without AbuseIPDB
+          // DNS resolution failed
         }
       }
+
+      // Make VirusTotal, AbuseIPDB, WHOIS calls in PARALLEL (no polling - fast)
+      const fastPromises = [];
 
       // VIRUSTOTAL - supports IP, domain, URL
       if (type === "ip" || type === "domain" || type === "url") {
         let vtEndpoint = "";
-
         if (type === "ip") {
           vtEndpoint = `https://www.virustotal.com/api/v3/ip_addresses/${value}`;
         } else if (type === "domain") {
           vtEndpoint = `https://www.virustotal.com/api/v3/domains/${value}`;
         } else if (type === "url") {
-          // Encode URL for VT (base64 without padding)
           const encoded = btoa(value);
           vtEndpoint = `https://www.virustotal.com/api/v3/urls/${encoded}`;
         }
 
         if (vtApiKey) {
-          try {
-            const vt = await fetch(vtEndpoint, {
-              headers: {
-                "x-apikey": vtApiKey
+          fastPromises.push(
+            (async () => {
+              try {
+                const vt = await fetch(vtEndpoint, { headers: { "x-apikey": vtApiKey } });
+                results.virustotal = await vt.json();
+              } catch (err) {
+                results.virustotal = { error: err.message };
               }
-            });
-            results.virustotal = await vt.json();
-          } catch (err) {
-            results.virustotal = { error: err.message };
-          }
+            })()
+          );
         } else {
           results.virustotal = { error: "VT_API_KEY not configured" };
         }
@@ -105,28 +104,25 @@ export default {
       // ABUSEIPDB - supports IP addresses (and domains/URLs via DNS resolution)
       if (type === "ip" || (type === "domain" && resolvedIp) || (type === "url" && resolvedIp)) {
         const ipToCheck = type === "ip" ? value : resolvedIp;
-        
         if (abuseipdbKey) {
-          try {
-            const abuse = await fetch(
-              `https://api.abuseipdb.com/api/v2/check?ipAddress=${ipToCheck}&maxAgeInDays=90`,
-              {
-                headers: {
-                  Key: abuseipdbKey,
-                  Accept: "application/json"
+          fastPromises.push(
+            (async () => {
+              try {
+                const abuse = await fetch(
+                  `https://api.abuseipdb.com/api/v2/check?ipAddress=${ipToCheck}&maxAgeInDays=90`,
+                  { headers: { Key: abuseipdbKey, Accept: "application/json" } }
+                );
+                const abuseData = await abuse.json();
+                if ((type === "domain" || type === "url") && resolvedIp) {
+                  abuseData.resolvedFrom = type === "url" ? domainToResolve : value;
+                  abuseData.resolvedIp = resolvedIp;
                 }
+                results.abuseipdb = abuseData;
+              } catch (err) {
+                results.abuseipdb = { error: err.message };
               }
-            );
-            const abuseData = await abuse.json();
-            // Add resolved domain info if we resolved an IP
-            if ((type === "domain" || type === "url") && resolvedIp) {
-              abuseData.resolvedFrom = type === "url" ? new URL(value).hostname : value;
-              abuseData.resolvedIp = resolvedIp;
-            }
-            results.abuseipdb = abuseData;
-          } catch (err) {
-            results.abuseipdb = { error: err.message };
-          }
+            })()
+          );
         } else {
           results.abuseipdb = { error: "ABUSEIPDB_KEY not configured" };
         }
@@ -135,27 +131,21 @@ export default {
       // WHOIS - supports domains and URLs (by extracting domain)
       if (type === "domain" || type === "url") {
         const domainForWhois = type === "url" ? domainToResolve : value;
-        
-        console.log("WHOIS lookup - type:", type, "domain:", domainForWhois, "hasKey:", !!whoisApiKey);
-        
         if (whoisApiKey && domainForWhois) {
-          try {
-            const whois = await fetch(
-              `https://api.apilayer.com/whois/query?domain=${encodeURIComponent(domainForWhois)}`,
-              {
-                headers: {
-                  "APIKEY": whoisApiKey
-                }
+          fastPromises.push(
+            (async () => {
+              try {
+                const whois = await fetch(
+                  `https://api.apilayer.com/whois/query?domain=${encodeURIComponent(domainForWhois)}`,
+                  { headers: { "APIKEY": whoisApiKey } }
+                );
+                const whoisData = await whois.json();
+                results.whois = whoisData.result || whoisData;
+              } catch (err) {
+                results.whois = { error: err.message };
               }
-            );
-            const whoisData = await whois.json();
-            console.log("WHOIS response status:", whois.status, "data:", whoisData);
-            // APILayer returns data in { result: {...} } format, extract it
-            results.whois = whoisData.result || whoisData;
-          } catch (err) {
-            console.error("WHOIS fetch error:", err);
-            results.whois = { error: err.message };
-          }
+            })()
+          );
         } else if (!domainForWhois) {
           results.whois = { error: "Could not extract domain from URL" };
         } else {
@@ -163,10 +153,12 @@ export default {
         }
       }
 
-      // URLSCAN - supports URLs and domains
-      if (type === "url" || type === "domain") {
-        if (urlscanKey) {
-          try {
+      // Execute fast API calls in parallel (no polling)
+      await Promise.all(fastPromises);
+
+      // URLSCAN - separate with polling (only this one waits)
+      if ((type === "url" || type === "domain") && urlscanKey) {
+        try {
             // First, submit the scan
             const urlscan = await fetch(
               "https://urlscan.io/api/v1/scan/",
@@ -280,9 +272,8 @@ export default {
           } catch (err) {
             results.urlscan = { error: err.message };
           }
-        } else {
-          results.urlscan = { error: "URLSCAN_KEY not configured" };
-        }
+      } else if (type === "url" || type === "domain") {
+        results.urlscan = { error: "URLSCAN_KEY not configured" };
       }
 
       // Return aggregated response
