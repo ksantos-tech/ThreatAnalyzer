@@ -207,11 +207,18 @@ export default {
                 
                 const resultData = await resultResponse.json();
                 
-                // Check if scan is complete (not 404/pending)
-                if (resultResponse.ok && !resultData.message?.includes("not finished")) {
+                // Check if scan is complete - look for actual result data properties
+                // A complete result has properties like "task", "page", "stats", "verdicts", etc.
+                // The submission response only has "uuid", "api", "result", "message", "visibility", "url"
+                const hasResultData = resultData.task || resultData.page || resultData.stats || resultData.verdicts || resultData.lists;
+                
+                if (resultResponse.ok && hasResultData) {
                   scanComplete = true;
                   finalResult = resultData;
                   break;
+                } else if (!resultResponse.ok || (resultData.message && resultData.message.includes("not finished"))) {
+                  // Still processing or error, continue polling
+                  continue;
                 }
               }
               
