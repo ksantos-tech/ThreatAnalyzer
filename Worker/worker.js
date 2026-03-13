@@ -177,7 +177,7 @@ export default {
                   "API-Key": urlscanKey
                 },
                 body: JSON.stringify({
-                  url: value,
+                  url: value.startsWith('http') ? value : 'https://' + value,
                   visibility: "public"
                 })
               }
@@ -237,11 +237,42 @@ export default {
               if (scanComplete && finalResult) {
                 results.urlscan = finalResult;
               } else {
-                // Return submission result with scan UUID for manual checking
-                results.urlscan = {
-                  ...scanResult,
-                  message: "Scan submitted. Result will be available at: https://urlscan.io/result/" + scanResult.uuid
-                };
+                // Final attempt - try direct result endpoint
+                try {
+                  const finalResponse = await fetch(
+                    `https://urlscan.io/api/v1/result/${scanResult.uuid}/`,
+                    {
+                      headers: {
+                        "API-Key": urlscanKey,
+                        "Accept": "application/json"
+                      }
+                    }
+                  );
+                  const finalData = await finalResponse.json();
+                  
+                  if (finalResponse.ok && (finalData.task || finalData.page || finalData.verdicts)) {
+                    results.urlscan = finalData;
+                  } else {
+                    // Return submission result with scan UUID for manual checking
+                    results.urlscan = {
+                      uuid: scanResult.uuid,
+                      result: scanResult.result,
+                      url: scanResult.url,
+                      message: "Scan submitted. Result will be available at: " + scanResult.result,
+                      verdict: null,
+                      status: "pending"
+                    };
+                  }
+                } catch (e) {
+                  results.urlscan = {
+                    uuid: scanResult.uuid,
+                    result: scanResult.result,
+                    url: scanResult.url,
+                    message: "Scan submitted. Result will be available at: " + scanResult.result,
+                    verdict: null,
+                    status: "pending"
+                  };
+                }
               }
             } else {
               results.urlscan = scanResult;
