@@ -229,42 +229,56 @@ export default {
               if (scanComplete && finalResult) {
                 results.urlscan = finalResult;
               } else {
-                // Final attempt - try direct result endpoint
+                // Extract essential fields from submission response
+                let domain = value;
                 try {
-                  const finalResponse = await fetch(
-                    `https://urlscan.io/api/v1/result/${scanResult.uuid}/`,
-                    {
-                      headers: {
-                        "API-Key": urlscanKey,
-                        "Accept": "application/json"
-                      }
-                    }
-                  );
-                  const finalData = await finalResponse.json();
-                  
-                  if (finalResponse.ok && (finalData.task || finalData.page || finalData.verdicts)) {
-                    results.urlscan = finalData;
-                  } else {
-                    // Return submission result with scan UUID for manual checking
-                    results.urlscan = {
-                      uuid: scanResult.uuid,
-                      result: scanResult.result,
-                      url: scanResult.url,
-                      message: "Scan submitted. Result will be available at: " + scanResult.result,
-                      verdict: null,
-                      status: "pending"
-                    };
+                  if (value.startsWith('http')) {
+                    domain = new URL(value).hostname;
+                  }
+                } catch (e) {}
+                
+                // Try to fetch additional data from result URL
+                let enrichedData = null;
+                try {
+                  const resultUrl = scanResult.result;
+                  const enrichResponse = await fetch(resultUrl + '?format=json', {
+                    headers: { "API-Key": urlscanKey, "Accept": "application/json" }
+                  });
+                  if (enrichResponse.ok) {
+                    enrichedData = await enrichResponse.json();
                   }
                 } catch (e) {
-                  results.urlscan = {
-                    uuid: scanResult.uuid,
-                    result: scanResult.result,
-                    url: scanResult.url,
-                    message: "Scan submitted. Result will be available at: " + scanResult.result,
-                    verdict: null,
-                    status: "pending"
-                  };
+                  // Failed to enrich, use submission data
                 }
+                
+                // Build preview with top 5 essential fields
+                const verdict = enrichedData?.verdicts?.overall?.malicious 
+                  ? "malicious" 
+                  : enrichedData?.verdicts?.overall?.safe 
+                    ? "safe" 
+                    : enrichedData?.verdicts?.phishing 
+                      ? "phishing" 
+                      : "unknown";
+                
+                const status = enrichedData ? "complete" : "pending";
+                const scanTime = enrichedData?.task?.time 
+                  ? new Date(enrichedData.task.time).toISOString() 
+                  : null;
+                
+                results.urlscan = {
+                  // Top 5 essential fields
+                  verdict: verdict,
+                  status: status,
+                  url: scanResult.url || value,
+                  domain: domain,
+                  scannedAt: scanTime,
+                  // Additional data
+                  uuid: scanResult.uuid,
+                  resultUrl: scanResult.result,
+                  message: enrichedData ? "Scan completed" : "Scan submitted. Result pending...",
+                  // Full data if available
+                  _fullResult: enrichedData
+                };
               }
             } else {
               results.urlscan = scanResult;
