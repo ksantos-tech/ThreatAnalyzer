@@ -331,6 +331,9 @@
             }
         }
 
+        // Ensure onclick handlers can access setScanMode
+        window.setScanMode = setScanMode;
+
         // API Key Management
         function loadKeys() {
             const vtKey = localStorage.getItem('vt_api_key');
