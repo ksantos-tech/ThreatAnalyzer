@@ -198,8 +198,9 @@ export default {
                 await new Promise(resolve => setTimeout(resolve, retryDelay));
                 console.log("URLScan poll attempt:", i + 1);
                 
+                // Use search API to get result
                 const resultResponse = await fetch(
-                  `https://urlscan.io/api/v1/result/${scanResult.uuid}/`,
+                  `https://urlscan.io/api/v1/search/?q=uuid:${scanResult.uuid}&size=1`,
                   {
                     headers: {
                       "API-Key": urlscanKey,
@@ -211,28 +212,25 @@ export default {
                 const resultData = await resultResponse.json();
                 console.log("URLScan response:", resultData);
                 
-                // Check if scan is complete - look for actual result data properties
-                // A complete result has properties like "task", "page", "stats", "verdicts", etc.
-                // The submission response only has "uuid", "api", "result", "message", "visibility", "url"
-                const hasResultData = resultData.task || resultData.page || resultData.stats || resultData.verdicts || resultData.lists;
+                // Check if scan is complete - look for results array with data
+                // A complete result has properties in the results array
+                const results = resultData.results;
                 
-                if (resultResponse.ok && hasResultData) {
-                  scanComplete = true;
-                  finalResult = resultData;
-                  console.log("URLScan complete!");
-                  break;
+                if (resultResponse.ok && results && results.length > 0) {
+                  const scanData = results[0];
+                  // Check for actual scan data (not just submission)
+                  if (scanData.task || scanData.page || scanData.stats || scanData.verdicts) {
+                    scanComplete = true;
+                    finalResult = scanData;
+                    console.log("URLScan complete!");
+                    break;
+                  }
                 } else if (!resultResponse.ok) {
                   console.log("URLScan response not OK, continuing...");
                   continue;
-                } else if (resultData.message && resultData.message.includes("not finished")) {
-                  console.log("URLScan still processing...");
-                  continue;
                 } else {
-                  // Check if it's still the submission response
-                  if (resultData.uuid && !hasResultData) {
-                    console.log("URLScan still submitting...");
-                    continue;
-                  }
+                  console.log("URLScan no results yet...");
+                  continue;
                 }
               }
               
