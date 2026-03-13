@@ -21,6 +21,9 @@ export default {
     const whoisApiKey = request.headers.get("X-Whois-Key") || env.WHOIS_API_KEY;
     const urlscanKey = request.headers.get("X-URLScan-Key") || env.URLSCAN_KEY;
 
+    // Debug: Log which keys are available
+    console.log("API Keys - VT:", !!vtApiKey, "AbuseIPDB:", !!abuseipdbKey, "WHOIS:", !!whoisApiKey, "URLScan:", !!urlscanKey);
+
     // Route: /scan?value=<ioc>
     if (path !== "/scan" || !value) {
       return json({ error: "Use /scan?value=<ioc>" }, 400);
@@ -133,18 +136,23 @@ export default {
       if (type === "domain" || type === "url") {
         const domainForWhois = type === "url" ? domainToResolve : value;
         
+        console.log("WHOIS lookup - type:", type, "domain:", domainForWhois, "hasKey:", !!whoisApiKey);
+        
         if (whoisApiKey && domainForWhois) {
           try {
             const whois = await fetch(
-              `https://api.apilayer.com/whois/query?domain=${domainForWhois}`,
+              `https://api.apilayer.com/whois/query?domain=${encodeURIComponent(domainForWhois)}`,
               {
                 headers: {
                   "APIKEY": whoisApiKey
                 }
               }
             );
-            results.whois = await whois.json();
+            const whoisData = await whois.json();
+            console.log("WHOIS response status:", whois.status, "data:", whoisData);
+            results.whois = whoisData;
           } catch (err) {
+            console.error("WHOIS fetch error:", err);
             results.whois = { error: err.message };
           }
         } else if (!domainForWhois) {
