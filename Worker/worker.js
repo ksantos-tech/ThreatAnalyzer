@@ -6,7 +6,7 @@ export default {
         headers: {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type"
+          "Access-Control-Allow-Headers": "Content-Type, X-VT-API-Key, X-AbuseIPDB-Key, X-Whois-Key, X-URLScan-Key"
         }
       });
     }
@@ -14,6 +14,12 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
     const value = url.searchParams.get("value");
+
+    // Get API keys from request headers (sent by frontend) or fall back to env
+    const vtApiKey = request.headers.get("X-VT-API-Key") || env.VT_API_KEY;
+    const abuseipdbKey = request.headers.get("X-AbuseIPDB-Key") || env.ABUSEIPDB_KEY;
+    const whoisApiKey = request.headers.get("X-Whois-Key") || env.WHOIS_API_KEY;
+    const urlscanKey = request.headers.get("X-URLScan-Key") || env.URLSCAN_KEY;
 
     // Route: /scan?value=<ioc>
     if (path !== "/scan" || !value) {
@@ -44,11 +50,11 @@ export default {
           vtEndpoint = `https://www.virustotal.com/api/v3/urls/${encoded}`;
         }
 
-        if (env.VT_API_KEY) {
+        if (vtApiKey) {
           try {
             const vt = await fetch(vtEndpoint, {
               headers: {
-                "x-apikey": env.VT_API_KEY
+                "x-apikey": vtApiKey
               }
             });
             results.virustotal = await vt.json();
@@ -62,13 +68,13 @@ export default {
 
       // ABUSEIPDB - only supports IP addresses
       if (type === "ip") {
-        if (env.ABUSEIPDB_KEY) {
+        if (abuseipdbKey) {
           try {
             const abuse = await fetch(
               `https://api.abuseipdb.com/api/v2/check?ipAddress=${value}&maxAgeInDays=90`,
               {
                 headers: {
-                  Key: env.ABUSEIPDB_KEY,
+                  Key: abuseipdbKey,
                   Accept: "application/json"
                 }
               }
@@ -84,13 +90,13 @@ export default {
 
       // WHOIS - only supports domains
       if (type === "domain") {
-        if (env.WHOIS_API_KEY) {
+        if (whoisApiKey) {
           try {
             const whois = await fetch(
               `https://api.apilayer.com/whois/query?domain=${value}`,
               {
                 headers: {
-                  apikey: env.WHOIS_API_KEY
+                  apikey: whoisApiKey
                 }
               }
             );
@@ -105,7 +111,7 @@ export default {
 
       // URLSCAN - supports URLs and domains
       if (type === "url" || type === "domain") {
-        if (env.URLSCAN_KEY) {
+        if (urlscanKey) {
           try {
             // First, submit the scan
             const urlscan = await fetch(
@@ -114,7 +120,7 @@ export default {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  "API-Key": env.URLSCAN_KEY
+                  "API-Key": urlscanKey
                 },
                 body: JSON.stringify({
                   url: value,
@@ -133,7 +139,7 @@ export default {
                 `https://urlscan.io/api/v1/result/${scanResult.uuid}/`,
                 {
                   headers: {
-                    "API-Key": env.URLSCAN_KEY,
+                    "API-Key": urlscanKey,
                     "Accept": "application/json"
                   }
                 }
@@ -204,8 +210,8 @@ function json(data, status = 200) {
     headers: {
       "Content-Type": "application/json",
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type"
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, X-VT-API-Key, X-AbuseIPDB-Key, X-Whois-Key, X-URLScan-Key"
     }
   });
 }

@@ -337,17 +337,30 @@
             const abuseipdbKey = localStorage.getItem('abuseipdb_api_key');
             const whoisKey = localStorage.getItem('whois_api_key');
             const urlscanKey = localStorage.getItem('urlscan_api_key');
-            if (vtKey) document.getElementById('vtApiKey').value = atob(vtKey);
-            if (abuseipdbKey) document.getElementById('abuseipdbApiKey').value = atob(abuseipdbKey);
-            if (whoisKey) document.getElementById('whoisApiKey').value = atob(whoisKey);
-            if (urlscanKey) document.getElementById('urlscanApiKey').value = atob(urlscanKey);
+            
+            const vtEl = document.getElementById('vtApiKey');
+            const abuseEl = document.getElementById('abuseipdbApiKey');
+            const whoisEl = document.getElementById('whoisApiKey');
+            const urlscanEl = document.getElementById('urlscanApiKey');
+            
+            if (vtEl && vtKey) vtEl.value = atob(vtKey);
+            if (abuseEl && abuseipdbKey) abuseEl.value = atob(abuseipdbKey);
+            if (whoisEl && whoisKey) whoisEl.value = atob(whoisKey);
+            if (urlscanEl && urlscanKey) urlscanEl.value = atob(urlscanKey);
         }
 
         function saveKeys() {
-            const vtKey = document.getElementById('vtApiKey').value.trim();
-            const abuseipdbKey = document.getElementById('abuseipdbApiKey').value.trim();
-            const whoisKey = document.getElementById('whoisApiKey').value.trim();
-            const urlscanKey = document.getElementById('urlscanApiKey').value.trim();
+            const vtEl = document.getElementById('vtApiKey');
+            const abuseEl = document.getElementById('abuseipdbApiKey');
+            const whoisEl = document.getElementById('whoisApiKey');
+            const urlscanEl = document.getElementById('urlscanApiKey');
+            
+            if (!vtEl || !abuseEl || !whoisEl || !urlscanEl) return;
+            
+            const vtKey = vtEl.value.trim();
+            const abuseipdbKey = abuseEl.value.trim();
+            const whoisKey = whoisEl.value.trim();
+            const urlscanKey = urlscanEl.value.trim();
             
             if (vtKey) localStorage.setItem('vt_api_key', btoa(vtKey));
             else localStorage.removeItem('vt_api_key');
@@ -370,10 +383,17 @@
             localStorage.removeItem('abuseipdb_api_key');
             localStorage.removeItem('whois_api_key');
             localStorage.removeItem('urlscan_api_key');
-            document.getElementById('vtApiKey').value = '';
-            document.getElementById('abuseipdbApiKey').value = '';
-            document.getElementById('whoisApiKey').value = '';
-            document.getElementById('urlscanApiKey').value = '';
+            
+            const vtEl = document.getElementById('vtApiKey');
+            const abuseEl = document.getElementById('abuseipdbApiKey');
+            const whoisEl = document.getElementById('whoisApiKey');
+            const urlscanEl = document.getElementById('urlscanApiKey');
+            
+            if (vtEl) vtEl.value = '';
+            if (abuseEl) abuseEl.value = '';
+            if (whoisEl) whoisEl.value = '';
+            if (urlscanEl) urlscanEl.value = '';
+            
             updateApiStatus();
         }
 
@@ -3323,6 +3343,9 @@ Date:
             try {
                 console.log('Scanning via Worker API:', ioc, 'type:', type);
                 
+                // Get API keys from localStorage
+                const keys = getKeys();
+                
                 // Use single endpoint that auto-detects IOC type
                 const url = WORKER_API_URL + '/scan?value=' + encodeURIComponent(ioc);
                 console.log('Worker API URL:', url);
@@ -3330,7 +3353,11 @@ Date:
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-VT-API-Key': keys.vt || '',
+                        'X-AbuseIPDB-Key': keys.abuseipdb || '',
+                        'X-Whois-Key': keys.whois || '',
+                        'X-URLScan-Key': keys.urlscan || ''
                     }
                 });
                 
